@@ -99,6 +99,7 @@ open class BaseFragment: Fragment(),
         super.onStart()
         windowInsetsProviderHelper.call(this)
         lifecycleHelper.onStart()
+        LColor.registerListener(this)
     }
 
     override fun onResume() {
@@ -115,6 +116,7 @@ open class BaseFragment: Fragment(),
     override fun onStop() {
         super.onStop()
         lifecycleHelper.onStop()
+        LColor.unregisterListener(this)
     }
 
     override fun onDestroy() {
@@ -133,7 +135,6 @@ open class BaseFragment: Fragment(),
         identityCheck<BackPressedProvider>(context) {
             it.addBackPressedListener(this)
         }
-        LColor.registerListener(this)
     }
 
     override fun onDetach() {
@@ -145,7 +146,6 @@ open class BaseFragment: Fragment(),
         identityCheck<BackPressedProvider> {
             it.removeBackPressedListener(this)
         }
-        LColor.unregisterListener(this)
     }
 
     fun addLifecycleListener(listener: FragmentLifecycleListener) {

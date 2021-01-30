@@ -5,6 +5,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.lollipop.iconcore.ui.BaseFragment
+import com.lollipop.windowslauncher.databinding.FragmentDesktopBinding
+import com.lollipop.windowslauncher.theme.LColor
+import com.lollipop.windowslauncher.utils.lazyBind
 
 /**
  * @author lollipop
@@ -13,12 +16,16 @@ import com.lollipop.iconcore.ui.BaseFragment
  */
 class DesktopFragment: BaseFragment() {
 
+    private val viewBinding: FragmentDesktopBinding by lazyBind()
+
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        return super.onCreateView(inflater, container, savedInstanceState)
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        return viewBinding.root
+    }
+
+    override fun onColorChanged() {
+        super.onColorChanged()
+        viewBinding.testView.setTextColor(LColor.foreground)
     }
 
 }

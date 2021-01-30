@@ -17,6 +17,31 @@ object LSettings {
 
     private const val KEY_PRIMARY_COLOR = "KEY_PRIMARY_COLOR"
 
+    private const val KEY_TILE_COL = "KEY_TILE_COL"
+
+    private const val KEY_CREVICE_MODE = "KEY_CREVICE_MODE"
+
+    const val TILE_COL_MAX = 12
+
+    const val TILE_COL_MIN = 6
+
+    fun setTileCol(context: Context, col: Int) {
+        context[KEY_TILE_COL] = col.range(TILE_COL_MIN, TILE_COL_MAX)
+    }
+
+    fun getTileCol(context: Context, ): Int {
+        return context[KEY_TILE_COL, TILE_COL_MIN].range(TILE_COL_MIN, TILE_COL_MAX)
+    }
+
+    fun setCreviceMode(context: Context, value: CreviceMode) {
+        context[KEY_CREVICE_MODE] = value.name
+    }
+
+    fun getCreviceMode(context: Context): CreviceMode {
+        val name = context[KEY_CREVICE_MODE, CreviceMode.M.name]
+        return CreviceMode.valueOf(name)
+    }
+
     fun setThemeMode(context: Context, value: ThemeMode) {
         context[KEY_THEME_MODE] = value.name
     }
@@ -59,6 +84,10 @@ object LSettings {
 
     enum class ThemeMode {
         AUTO, LIGHT, DARK
+    }
+
+    enum class CreviceMode(val dp: Int) {
+        L(18), M(10), S(5)
     }
 
 }
