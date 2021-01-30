@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatImageView
+import com.lollipop.windowslauncher.theme.LColor
 import com.lollipop.windowslauncher.utils.IconHelper
 import com.lollipop.windowslauncher.utils.doAsync
 import com.lollipop.windowslauncher.utils.findDrawableId
@@ -78,6 +79,14 @@ class IconImageView(context: Context, attr: AttributeSet?, defStyle: Int):
                 setIconDrawable(drawable)
             }
         }
+    }
+
+    fun updateBackground() {
+        updateBackground(LColor.primary)
+    }
+
+    fun updateBackground(color: Int) {
+        setBackgroundColor(color)
     }
 
     private fun setIconDrawable(loadIcon: Drawable) {

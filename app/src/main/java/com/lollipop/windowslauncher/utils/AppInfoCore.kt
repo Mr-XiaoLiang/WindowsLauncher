@@ -1,8 +1,12 @@
 package com.lollipop.windowslauncher.utils
 
+import android.annotation.SuppressLint
 import android.content.*
+import android.content.pm.PackageManager
+import android.content.pm.PackageManager.MATCH_ALL
 import android.content.pm.ResolveInfo
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.text.TextUtils
 import com.lollipop.windowslauncher.utils.IconHelper.Companion.fullName
 import com.lollipop.windowslauncher.views.EmptyDrawable
@@ -83,6 +87,7 @@ object AppInfoCore: BroadcastReceiver() {
         reload(context)
     }
 
+    @SuppressLint("QueryPermissionsNeeded")
     private fun reload(context: Context) {
         if (isLoading) {
             return
@@ -91,7 +96,13 @@ object AppInfoCore: BroadcastReceiver() {
         val pm = context.packageManager
         val mainIntent = Intent(Intent.ACTION_MAIN)
         mainIntent.addCategory(Intent.CATEGORY_LAUNCHER)
-        val appList = pm.queryIntentActivities(mainIntent, 0)
+        val flag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            MATCH_ALL
+        } else {
+            0
+        }
+        val appList = pm.queryIntentActivities(mainIntent, flag)
+        Collections.sort(appList, ResolveInfo.DisplayNameComparator(pm))
         appResolveInfo.clear()
         for (info in appList) {
             appResolveInfo.add(AppResolveInfo(info))
