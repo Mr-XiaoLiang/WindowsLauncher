@@ -18,11 +18,18 @@ object LColor {
         Handler(Looper.getMainLooper())
     }
 
-    var background: Int = Color.BLACK
+    var style: Style = Style.WHITE
         private set
 
-    var foreground: Int = Color.WHITE
-        private set
+    val background: Int
+        get() {
+            return style.back
+        }
+
+    val foreground: Int
+        get() {
+            return style.fore
+        }
 
     var primary: Int = Color.BLUE
         private set
@@ -30,9 +37,8 @@ object LColor {
     /**
      * 更新全局的主题色
      */
-    fun update(background: Int, foreground: Int, primary: Int) {
-        this.background = background
-        this.foreground = foreground
+    fun update(style: Style, primary: Int) {
+        this.style = style
         this.primary = primary
         notifyColorChange()
     }
@@ -59,6 +65,8 @@ object LColor {
             }
         }
         listenerList.add(WeakReference(listener))
+        // 添加的时候触发一次更新
+        listener.onColorChanged()
     }
 
     private fun notifyColorChange() {
@@ -87,6 +95,10 @@ object LColor {
 
     interface OnColorChangeListener {
         fun onColorChanged()
+    }
+
+    enum class Style(val back: Int, val fore: Int) {
+        WHITE(Color.WHITE, Color.BLACK), BLACK(Color.BLACK, Color.WHITE)
     }
 
 }

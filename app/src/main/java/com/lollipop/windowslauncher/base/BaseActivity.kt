@@ -77,9 +77,15 @@ open class BaseActivity: AppCompatActivity(),
         }
     }
 
-    open val isLightStatusBar = false
+    open val isLightStatusBar: Boolean
+        get() {
+            return LColor.style == LColor.Style.WHITE
+        }
 
-    open val isLightNavigationBar = false
+    open val isLightNavigationBar: Boolean
+        get() {
+            return LColor.style == LColor.Style.WHITE
+        }
 
     private fun setViewFlag(open: Boolean, flag: Int) {
         val decorView = window?.decorView?:return
@@ -95,6 +101,11 @@ open class BaseActivity: AppCompatActivity(),
         }
     }
 
+    protected fun updateViewFlag() {
+        setViewFlag(isLightStatusBar, View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR)
+        setViewFlag(isLightNavigationBar, View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR)
+    }
+
     override fun onStart() {
         super.onStart()
         LColor.registerListener(this)
@@ -102,8 +113,7 @@ open class BaseActivity: AppCompatActivity(),
 
     override fun onResume() {
         super.onResume()
-        setViewFlag(isLightStatusBar, View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR)
-        setViewFlag(isLightNavigationBar, View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR)
+        updateViewFlag()
     }
 
     override fun onPause() {
@@ -149,7 +159,7 @@ open class BaseActivity: AppCompatActivity(),
     }
 
     override fun onColorChanged() {
-
+        updateViewFlag()
     }
 
 }
