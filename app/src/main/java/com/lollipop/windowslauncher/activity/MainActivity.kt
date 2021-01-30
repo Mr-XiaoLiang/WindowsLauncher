@@ -39,6 +39,14 @@ class MainActivity : BaseActivity() {
         viewBinding.indicatorView.bindViewPager(viewBinding.pageGroup)
     }
 
+    override fun canBack(): Boolean {
+        if (viewBinding.pageGroup.currentItem != 0) {
+            viewBinding.pageGroup.setCurrentItem(0, true)
+            return false
+        }
+        return super.canBack()
+    }
+
     private class PageAdapter(
         private val fragments: Array<BaseFragment>,
         fragmentManager: FragmentManager

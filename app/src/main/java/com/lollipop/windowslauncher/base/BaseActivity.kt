@@ -135,7 +135,14 @@ open class BaseActivity: AppCompatActivity(),
         if (backPressedProviderHelper.onBackPressed()) {
             return
         }
+        if (!canBack()) {
+            return
+        }
         super.onBackPressed()
+    }
+
+    protected open fun canBack(): Boolean {
+        return true
     }
 
     protected open fun onWindowInsetsChange(
