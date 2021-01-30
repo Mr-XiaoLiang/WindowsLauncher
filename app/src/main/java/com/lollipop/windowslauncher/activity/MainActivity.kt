@@ -31,16 +31,18 @@ class MainActivity : BaseActivity() {
     override fun onColorChanged() {
         super.onColorChanged()
         viewBinding.rootGroup.setBackgroundColor(LColor.background)
+        viewBinding.indicatorView.setColor(LColor.foreground)
     }
 
     private fun initView() {
         viewBinding.pageGroup.adapter = PageAdapter(fragmentArray, supportFragmentManager)
+        viewBinding.indicatorView.bindViewPager(viewBinding.pageGroup)
     }
 
     private class PageAdapter(
         private val fragments: Array<BaseFragment>,
         fragmentManager: FragmentManager
-    ): FragmentStatePagerAdapter(fragmentManager, BEHAVIOR_SET_USER_VISIBLE_HINT) {
+    ): FragmentStatePagerAdapter(fragmentManager, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
 
         override fun getCount(): Int {
             return fragments.size
