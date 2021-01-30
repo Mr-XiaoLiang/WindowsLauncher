@@ -7,15 +7,13 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.lollipop.iconcore.listener.WindowInsetsHelper
+import com.lollipop.windowslauncher.listener.WindowInsetsHelper
 import com.lollipop.iconcore.ui.BaseFragment
 import com.lollipop.windowslauncher.databinding.FragmentAppListBinding
 import com.lollipop.windowslauncher.databinding.ItemAppListBinding
 import com.lollipop.windowslauncher.databinding.ItemAppListKeyBinding
 import com.lollipop.windowslauncher.theme.LColor
-import com.lollipop.windowslauncher.utils.IconHelper
-import com.lollipop.windowslauncher.utils.bind
-import com.lollipop.windowslauncher.utils.lazyBind
+import com.lollipop.windowslauncher.utils.*
 
 /**
  * @author lollipop

@@ -11,7 +11,19 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager
  * @author lollipop
  * @date 1/23/21 16:53
  */
-class DefaultItemDecoration(private val space: Int) : RecyclerView.ItemDecoration() {
+class DefaultItemDecoration(
+    private val space: Int,
+    private var top: Int = 0,
+    private var bottom: Int = 0,
+) : RecyclerView.ItemDecoration() {
+
+    fun setHeader(top: Int) {
+        this.top = top
+    }
+
+    fun setFooter(bottom: Int) {
+        this.bottom = bottom
+    }
 
     override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
         when (parent.layoutManager) {
@@ -37,9 +49,7 @@ class DefaultItemDecoration(private val space: Int) : RecyclerView.ItemDecoratio
         outRect.bottom = space / 2
 
         val position = parent.getChildAdapterPosition(view)
-        if (position == 0) {
-            outRect.top = space
-        }
+        updateHeaderFooter(parent, position, outRect, 1)
 
         if (layoutManager.orientation == RecyclerView.HORIZONTAL) {
             val top = outRect.left
@@ -79,9 +89,7 @@ class DefaultItemDecoration(private val space: Int) : RecyclerView.ItemDecoratio
         outRect.bottom = space / 2
 
         val position = parent.getChildAdapterPosition(view)
-        if (position / spanCount == 0) {
-            outRect.top = space
-        }
+        updateHeaderFooter(parent, position, outRect, spanCount)
 
         if (layoutManager.orientation == RecyclerView.HORIZONTAL) {
             val top = outRect.left
@@ -121,9 +129,7 @@ class DefaultItemDecoration(private val space: Int) : RecyclerView.ItemDecoratio
         outRect.bottom = space / 2
 
         val position = parent.getChildAdapterPosition(view)
-        if (position / spanCount == 0) {
-            outRect.top = space
-        }
+        updateHeaderFooter(parent, position, outRect, spanCount)
 
         if (layoutManager.orientation == RecyclerView.HORIZONTAL) {
             val top = outRect.left
@@ -131,6 +137,29 @@ class DefaultItemDecoration(private val space: Int) : RecyclerView.ItemDecoratio
             val left = outRect.top
             val right = outRect.bottom
             outRect.set(left, top, right, bottom)
+        }
+    }
+
+    private fun updateHeaderFooter(
+        parent: RecyclerView,
+        position: Int,
+        outRect: Rect,
+        spanCount: Int,
+    ) {
+        if (position / spanCount == 0) {
+            outRect.top = if (top != 0) {
+                top
+            } else {
+                space
+            }
+        }
+        val itemCount = parent.adapter?.itemCount?:return
+        if (position / spanCount == itemCount / spanCount) {
+            outRect.bottom = if (bottom != 0) {
+                bottom
+            } else {
+                space
+            }
         }
     }
 
