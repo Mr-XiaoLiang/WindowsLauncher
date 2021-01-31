@@ -11,10 +11,10 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager
  * @author lollipop
  * @date 1/23/21 16:53
  */
-class DefaultItemDecoration(
-    private val space: Int,
-    private var top: Int = 0,
-    private var bottom: Int = 0,
+open class DefaultItemDecoration(
+    protected val space: Int,
+    protected var top: Int = 0,
+    protected var bottom: Int = 0,
 ) : RecyclerView.ItemDecoration() {
 
     fun setHeader(top: Int) {

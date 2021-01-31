@@ -34,6 +34,19 @@ object LColor {
     var primary: Int = Color.BLUE
         private set
 
+    var tileTransparent = false
+        private set
+
+    val tileBackground: Int
+        get() {
+            return if (tileTransparent) {
+                Color.TRANSPARENT
+            } else {
+                primary
+            }
+        }
+
+
     /**
      * 更新全局的主题色
      */

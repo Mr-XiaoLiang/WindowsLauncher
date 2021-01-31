@@ -572,3 +572,17 @@ inline fun <reified T: Any> check(ctx: Any? = null, run: (T) -> Unit): Boolean {
     }
     return false
 }
+
+inline fun <T: View> T.visibleOrGone(boolean: Boolean, onVisible: (T.() -> Unit) = {}) {
+    visibility = if (boolean) { View.VISIBLE } else { View.GONE }
+    if (boolean) {
+        onVisible.invoke(this)
+    }
+}
+
+inline fun <T: View> T.visibleOrInvisible(boolean: Boolean, onVisible: (T.() -> Unit) = {}) {
+    visibility = if (boolean) { View.VISIBLE } else { View.INVISIBLE }
+    if (boolean) {
+        onVisible.invoke(this)
+    }
+}

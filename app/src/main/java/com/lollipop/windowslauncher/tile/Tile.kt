@@ -6,4 +6,7 @@ package com.lollipop.windowslauncher.tile
  * 瓷砖的接口
  */
 interface Tile {
+
+    var size: TileSize
+
 }
