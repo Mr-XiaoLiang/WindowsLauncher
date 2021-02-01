@@ -11,7 +11,10 @@ import com.lollipop.windowslauncher.tile.TileSize
  * @author lollipop
  * @date 1/31/21 21:09
  */
-class TileLayoutManager: RecyclerView.LayoutManager() {
+class TileLayoutManager(
+    var spanCount: Int,
+    val tileSizeProvider: (Int) -> TileSize
+): RecyclerView.LayoutManager() {
 
     override fun generateDefaultLayoutParams(): RecyclerView.LayoutParams {
         return TileLayoutParams(
