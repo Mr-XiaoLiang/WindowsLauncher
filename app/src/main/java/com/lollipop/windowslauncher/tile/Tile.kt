@@ -9,4 +9,6 @@ interface Tile {
 
     var size: TileSize
 
+    val tileType: TileType
+
 }

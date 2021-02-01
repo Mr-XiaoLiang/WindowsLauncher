@@ -1,5 +1,6 @@
 package com.lollipop.windowslauncher.fragment
 
+import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
@@ -11,8 +12,14 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.lollipop.iconcore.ui.BaseFragment
 import com.lollipop.windowslauncher.databinding.FragmentDesktopBinding
-import com.lollipop.windowslauncher.utils.DefaultItemDecoration
-import com.lollipop.windowslauncher.utils.lazyBind
+import com.lollipop.windowslauncher.theme.LColor
+import com.lollipop.windowslauncher.tile.Tile
+import com.lollipop.windowslauncher.tile.TileAdapter
+import com.lollipop.windowslauncher.tile.TileSize
+import com.lollipop.windowslauncher.tile.impl.AppTile
+import com.lollipop.windowslauncher.utils.*
+import java.util.*
+import kotlin.collections.ArrayList
 
 /**
  * @author lollipop
@@ -23,6 +30,34 @@ class DesktopFragment: BaseFragment() {
 
     private val viewBinding: FragmentDesktopBinding by lazyBind()
 
+    private val tileList = ArrayList<Tile>()
+
+    private val tileDecoration = TileDecoration(0)
+
+    private val appHelper = IconHelper.newHelper { null }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        log("onCreate")
+
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        appHelper.loadAppInfo(context)
+        val tileSizeValues = TileSize.values()
+        val random = Random()
+        val appCount = appHelper.appCount.range(0, 30)
+        log("appCount = $appCount")
+        for (i in 0 until appCount) {
+            val appInfo = appHelper.getAppInfo(i)
+            tileList.add(AppTile(appInfo).apply {
+                size = tileSizeValues[random.nextInt(tileSizeValues.size)]
+            })
+        }
+        viewBinding.tileGroup.adapter?.notifyDataSetChanged()
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
@@ -31,15 +66,41 @@ class DesktopFragment: BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        viewBinding.tileGroup.apply {
+            layoutManager = GridLayoutManager(
+                context, LSettings.getTileCol(context),
+                RecyclerView.VERTICAL, false).apply {
+                    spanSizeLookup = SpanSizeController(tileList)
+            }
+            addItemDecoration(tileDecoration)
+            adapter = TileAdapter(tileList, ::onTileClick, ::onTileLongClick)
+        }
     }
 
     override fun onColorChanged() {
         super.onColorChanged()
+        tileDecoration.color = LColor.background
     }
 
-    private class SpanSizeController: GridLayoutManager.SpanSizeLookup() {
+    override fun onResume() {
+        super.onResume()
+        context?.let {
+            tileDecoration.setSpace(LSettings.getCreviceMode(it).dp.dp2px().toInt()) {
+                viewBinding.tileGroup.requestLayout()
+            }
+        }
+    }
+
+    private fun onTileClick(tile: Tile) {
+    }
+
+    private fun onTileLongClick(tile: Tile) {
+    }
+
+    private class SpanSizeController(
+        private val tileList: ArrayList<Tile>): GridLayoutManager.SpanSizeLookup() {
         override fun getSpanSize(position: Int): Int {
-            TODO("Not yet implemented")
+            return tileList[position].size.width
         }
     }
 

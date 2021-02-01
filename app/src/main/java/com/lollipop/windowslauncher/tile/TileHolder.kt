@@ -10,8 +10,18 @@ import com.lollipop.windowslauncher.views.TileItemShell
  * @date 1/31/21 16:25
  */
 abstract class TileHolder<T: Tile>(
-    view: View
+    view: View,
+    private val onClick: (TileHolder<*>) -> Unit,
+    private val onLongClick: (TileHolder<*>) -> Unit,
 ): RecyclerView.ViewHolder(TileItemShell.shellWith(view)) {
+
+    init {
+        itemView.setOnClickListener(::onClick)
+        itemView.setOnLongClickListener {
+            onLongClick(it)
+            true
+        }
+    }
 
     fun bind(tile: T) {
         if (itemView is TileItemShell) {
@@ -22,5 +32,17 @@ abstract class TileHolder<T: Tile>(
     }
 
     abstract fun onBind(tile: T)
+
+    open fun onClick(view: View) {
+        if (view == itemView) {
+            onClick(this)
+        }
+    }
+
+    open fun onLongClick(view: View) {
+        if (view == itemView) {
+            onLongClick(this)
+        }
+    }
 
 }

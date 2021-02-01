@@ -2,6 +2,7 @@ package com.lollipop.windowslauncher.tile.impl
 
 import com.lollipop.windowslauncher.tile.Tile
 import com.lollipop.windowslauncher.tile.TileSize
+import com.lollipop.windowslauncher.tile.TileType
 import com.lollipop.windowslauncher.utils.IconHelper
 
 /**
@@ -12,5 +13,7 @@ import com.lollipop.windowslauncher.utils.IconHelper
 class AppTile(var appInfo: IconHelper.AppInfo): Tile {
 
     override var size = TileSize.S
+
+    override val tileType = TileType.App
 
 }

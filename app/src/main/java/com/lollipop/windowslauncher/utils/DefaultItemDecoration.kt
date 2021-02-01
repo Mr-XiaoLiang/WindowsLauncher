@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager
  * @date 1/23/21 16:53
  */
 open class DefaultItemDecoration(
-    protected val space: Int,
+    protected var space: Int,
     protected var top: Int = 0,
     protected var bottom: Int = 0,
 ) : RecyclerView.ItemDecoration() {
@@ -23,6 +23,13 @@ open class DefaultItemDecoration(
 
     fun setFooter(bottom: Int) {
         this.bottom = bottom
+    }
+
+    fun setSpace(space: Int, onChange: (() -> Unit) = {}) {
+        if (this.space != space) {
+            this.space = space
+            onChange()
+        }
     }
 
     override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {

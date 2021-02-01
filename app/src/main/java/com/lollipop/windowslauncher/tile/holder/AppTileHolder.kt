@@ -12,8 +12,10 @@ import com.lollipop.windowslauncher.utils.visibleOrGone
  * 应用信息的瓷片Holder
  */
 class AppTileHolder(
-    private val viewBinding: ItemTileAppBinding
-    ): TileHolder<AppTile>(viewBinding.root) {
+    private val viewBinding: ItemTileAppBinding,
+    onClick: (TileHolder<*>) -> Unit,
+    onLongClick: (TileHolder<*>) -> Unit,
+    ): TileHolder<AppTile>(viewBinding.root, onClick, onLongClick) {
 
     override fun onBind(tile: AppTile) {
         viewBinding.tileName.visibleOrGone(

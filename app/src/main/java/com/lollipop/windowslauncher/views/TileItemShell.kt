@@ -39,12 +39,7 @@ class TileItemShell(
      */
     private val ratio: Float
         get() {
-            return when(tileSize) {
-                TileSize.S -> 1F
-                TileSize.M -> 1F
-                TileSize.L -> 2F
-                TileSize.XL -> 1F
-            }
+            return tileSize.height * 1F / tileSize.width
         }
 
     fun setTileSize(size: TileSize) {
@@ -58,7 +53,7 @@ class TileItemShell(
         val widthSize = MeasureSpec.getSize(widthMeasureSpec)
         super.onMeasure(
             MeasureSpec.makeMeasureSpec(widthSize, MeasureSpec.EXACTLY),
-            MeasureSpec.makeMeasureSpec((widthSize / ratio).toInt(), MeasureSpec.EXACTLY),
+            MeasureSpec.makeMeasureSpec((widthSize * ratio).toInt(), MeasureSpec.EXACTLY),
         )
     }
 
