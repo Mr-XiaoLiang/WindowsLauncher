@@ -13,6 +13,7 @@ import com.lollipop.windowslauncher.tile.TileSize
  */
 class TileLayoutManager(
     var spanCount: Int,
+    var orientation: Int = RecyclerView.VERTICAL,
     val tileSizeProvider: (Int) -> TileSize
 ): RecyclerView.LayoutManager() {
 
@@ -21,6 +22,8 @@ class TileLayoutManager(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT)
     }
+
+
 
 
 
