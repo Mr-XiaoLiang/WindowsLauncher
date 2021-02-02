@@ -23,8 +23,27 @@ class TileLayoutManager(
             ViewGroup.LayoutParams.MATCH_PARENT)
     }
 
+    override fun canScrollHorizontally(): Boolean {
+        return orientation == RecyclerView.HORIZONTAL
+    }
 
+    override fun canScrollVertically(): Boolean {
+        return orientation == RecyclerView.VERTICAL
+    }
 
+    override fun checkLayoutParams(lp: RecyclerView.LayoutParams?): Boolean {
+        return lp != null && lp is TileLayoutParams
+    }
+
+    override fun onLayoutChildren(recycler: RecyclerView.Recycler?, state: RecyclerView.State?) {
+        state?:return
+        recycler?:return
+        if (itemCount == 0) {
+            removeAndRecycleAllViews(recycler)
+            return
+        }
+        detachAndScrapAttachedViews(recycler)
+    }
 
 
     class TileLayoutParams: RecyclerView.LayoutParams {
