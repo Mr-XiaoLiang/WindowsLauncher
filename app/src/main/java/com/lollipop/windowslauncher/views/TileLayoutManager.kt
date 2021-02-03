@@ -1,6 +1,7 @@
 package com.lollipop.windowslauncher.views
 
 import android.content.Context
+import android.graphics.Point
 import android.util.AttributeSet
 import android.view.ViewGroup
 import android.view.ViewGroup.MarginLayoutParams
@@ -12,10 +13,72 @@ import com.lollipop.windowslauncher.tile.TileSize
  * @date 1/31/21 21:09
  */
 class TileLayoutManager(
-    var spanCount: Int,
+    private var spanCount: Int,
     var orientation: Int = RecyclerView.VERTICAL,
     val tileSizeProvider: (Int) -> TileSize
 ): RecyclerView.LayoutManager() {
+
+    private val lastYList = ArrayList<Int>(spanCount)
+
+    private val blockList = ArrayList<Block>()
+
+    fun setSpanCount(value: Int) {
+        this.spanCount = value
+        lastYList.clear()
+        requestLayout()
+    }
+
+    private fun getLastY(index: Int): Int {
+        if (index < 0 || index >= spanCount) {
+            return -1
+        }
+        if (index >= lastYList.size) {
+            return 0
+        }
+        return lastYList[index]
+    }
+
+    private fun setLastY(index: Int, y: Int) {
+        if (index < 0 || index >= spanCount) {
+            return
+        }
+        while (lastYList.size < spanCount) {
+            lastYList.add(0)
+        }
+        lastYList[index] = y
+    }
+
+    private fun addLastY(index: Int, height: Int, span: Int) {
+        for (i in 0 until span) {
+            setLastY(index, getLastY(index + i) + height)
+        }
+    }
+
+    /**
+     * 寻找一个可用的空间
+     */
+    private fun findSpace(span: Int): Point {
+        var index = -1
+        var y = -1
+        for (i in 0 until spanCount) {
+            if (i + span > spanCount) {
+                break
+            }
+            var min = -1
+            // 取从此处开始最大的值
+            for (k in 0 until span) {
+                val ly = getLastY(i + k)
+                if (min < ly) {
+                    min = ly
+                }
+            }
+            if (min in 0 until y) {
+                index = i
+                y = min
+            }
+        }
+        return Point(index, y)
+    }
 
     override fun generateDefaultLayoutParams(): RecyclerView.LayoutParams {
         return TileLayoutParams(
@@ -43,8 +106,10 @@ class TileLayoutManager(
             return
         }
         detachAndScrapAttachedViews(recycler)
+
     }
 
+    private class Block(var x: Int, var y: Int, val width: Int, val height: Int)
 
     class TileLayoutParams: RecyclerView.LayoutParams {
 
