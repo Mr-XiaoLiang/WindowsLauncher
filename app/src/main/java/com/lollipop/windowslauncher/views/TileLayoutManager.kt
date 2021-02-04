@@ -2,6 +2,7 @@ package com.lollipop.windowslauncher.views
 
 import android.content.Context
 import android.graphics.Point
+import android.graphics.Rect
 import android.util.AttributeSet
 import android.view.ViewGroup
 import android.view.ViewGroup.MarginLayoutParams
@@ -15,7 +16,7 @@ import com.lollipop.windowslauncher.tile.TileSize
 class TileLayoutManager(
     private var spanCount: Int,
     var orientation: Int = RecyclerView.VERTICAL,
-    val tileSizeProvider: (Int) -> TileSize
+    private val infoProvider: TileInfoProvider,
 ): RecyclerView.LayoutManager() {
 
     private val lastYList = ArrayList<Int>(spanCount)
@@ -25,6 +26,7 @@ class TileLayoutManager(
     fun setSpanCount(value: Int) {
         this.spanCount = value
         lastYList.clear()
+        blockList.clear()
         requestLayout()
     }
 
@@ -107,9 +109,27 @@ class TileLayoutManager(
         }
         detachAndScrapAttachedViews(recycler)
 
+        val left = paddingLeft
+        val top = paddingTop
+        val right = paddingRight
+        val bottom = paddingBottom
+        val tileWidth = (width - left - right) * 1F / spanCount
+
+        for (i in 0 until itemCount) {
+            val view = recycler.getViewForPosition(i)
+            val tileSize = infoProvider.getTileSize(i)
+            val decorInsets = infoProvider.getDecorInsets(i)
+            val findSpace = findSpace(tileSize.width)
+        }
+
     }
 
-    private class Block(var x: Int, var y: Int, val width: Int, val height: Int)
+    private class Block(
+        var x: Int,
+        var y: Int,
+        var size: TileSize,
+        var decorInsets: Rect
+    )
 
     class TileLayoutParams: RecyclerView.LayoutParams {
 
@@ -132,6 +152,14 @@ class TileLayoutManager(
         }
 
         var tileSize = TileSize.S
+
+    }
+
+    interface TileInfoProvider {
+
+        fun getTileSize(position: Int): TileSize
+
+        fun getDecorInsets(position: Int): Rect
 
     }
 
