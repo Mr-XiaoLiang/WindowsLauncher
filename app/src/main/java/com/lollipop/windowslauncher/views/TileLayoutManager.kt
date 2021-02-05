@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Point
 import android.graphics.Rect
 import android.util.AttributeSet
+import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.MarginLayoutParams
 import androidx.recyclerview.widget.RecyclerView
@@ -17,7 +18,7 @@ class TileLayoutManager(
     private var spanCount: Int,
     var orientation: Int = RecyclerView.VERTICAL,
     private val infoProvider: TileInfoProvider,
-): RecyclerView.LayoutManager() {
+) : RecyclerView.LayoutManager() {
 
     private val lastYList = ArrayList<Int>(spanCount)
 
@@ -85,7 +86,8 @@ class TileLayoutManager(
     override fun generateDefaultLayoutParams(): RecyclerView.LayoutParams {
         return TileLayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT)
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
     }
 
     override fun canScrollHorizontally(): Boolean {
@@ -101,8 +103,8 @@ class TileLayoutManager(
     }
 
     override fun onLayoutChildren(recycler: RecyclerView.Recycler?, state: RecyclerView.State?) {
-        state?:return
-        recycler?:return
+        state ?: return
+        recycler ?: return
         if (itemCount == 0) {
             removeAndRecycleAllViews(recycler)
             return
@@ -118,8 +120,21 @@ class TileLayoutManager(
         for (i in 0 until itemCount) {
             val view = recycler.getViewForPosition(i)
             val tileSize = infoProvider.getTileSize(i)
-            val decorInsets = infoProvider.getDecorInsets(i)
             val findSpace = findSpace(tileSize.width)
+            val decorInsets = infoProvider.getDecorInsets(i, findSpace.x, findSpace.y, tileSize)
+
+            val itemWidth =
+                (tileSize.width * tileWidth - decorInsets.left - decorInsets.right).toInt()
+            val itemHeight =
+                (tileSize.height * tileWidth - decorInsets.top - decorInsets.bottom).toInt()
+            view.measure(
+                View.MeasureSpec.makeMeasureSpec(itemWidth, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(itemHeight, View.MeasureSpec.EXACTLY)
+            )
+
+            val itemLeft = (tileWidth * findSpace.x + decorInsets.left).toInt()
+            val itemTop = (tileWidth * findSpace.y + decorInsets.top).toInt()
+            view.layout(itemLeft, itemTop, itemLeft + itemWidth, itemTop + itemHeight)
         }
 
     }
@@ -131,17 +146,19 @@ class TileLayoutManager(
         var decorInsets: Rect
     )
 
-    class TileLayoutParams: RecyclerView.LayoutParams {
+    class TileLayoutParams : RecyclerView.LayoutParams {
 
-        constructor(c: Context?, attrs: AttributeSet?): super(c, attrs)
-        constructor(width: Int, height: Int): super(width, height)
-        constructor(source: MarginLayoutParams?): super(source) {
+        constructor(c: Context?, attrs: AttributeSet?) : super(c, attrs)
+        constructor(width: Int, height: Int) : super(width, height)
+        constructor(source: MarginLayoutParams?) : super(source) {
             copyParams(source)
         }
-        constructor(source: ViewGroup.LayoutParams?): super(source) {
+
+        constructor(source: ViewGroup.LayoutParams?) : super(source) {
             copyParams(source)
         }
-        constructor(source: RecyclerView.LayoutParams?): super(source) {
+
+        constructor(source: RecyclerView.LayoutParams?) : super(source) {
             copyParams(source)
         }
 
@@ -159,7 +176,7 @@ class TileLayoutManager(
 
         fun getTileSize(position: Int): TileSize
 
-        fun getDecorInsets(position: Int): Rect
+        fun getDecorInsets(position: Int, x: Int, y: Int, size: TileSize): Rect
 
     }
 
