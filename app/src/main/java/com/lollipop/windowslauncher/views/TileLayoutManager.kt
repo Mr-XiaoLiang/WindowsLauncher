@@ -132,8 +132,8 @@ class TileLayoutManager(
                 View.MeasureSpec.makeMeasureSpec(itemHeight, View.MeasureSpec.EXACTLY)
             )
 
-            val itemLeft = (tileWidth * findSpace.x + decorInsets.left).toInt()
-            val itemTop = (tileWidth * findSpace.y + decorInsets.top).toInt()
+            val itemLeft = (tileWidth * findSpace.x + decorInsets.left + left).toInt()
+            val itemTop = (tileWidth * findSpace.y + decorInsets.top + top).toInt()
             view.layout(itemLeft, itemTop, itemLeft + itemWidth, itemTop + itemHeight)
         }
 
