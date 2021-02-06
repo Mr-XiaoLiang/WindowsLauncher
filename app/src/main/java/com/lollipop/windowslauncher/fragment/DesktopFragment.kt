@@ -12,7 +12,6 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.lollipop.iconcore.ui.BaseFragment
 import com.lollipop.windowslauncher.databinding.FragmentDesktopBinding
-import com.lollipop.windowslauncher.theme.LColor
 import com.lollipop.windowslauncher.tile.Tile
 import com.lollipop.windowslauncher.tile.TileAdapter
 import com.lollipop.windowslauncher.tile.TileSize
@@ -26,13 +25,13 @@ import kotlin.collections.ArrayList
  * @date 1/30/21 14:01
  * 桌面的碎片
  */
-class DesktopFragment: BaseFragment() {
+class DesktopFragment : BaseFragment() {
 
     private val viewBinding: FragmentDesktopBinding by lazyBind()
 
     private val tileList = ArrayList<Tile>()
 
-    private val tileDecoration = TileDecoration(0)
+//    private val tileDecoration = TileDecoration(0)
 
     private val appHelper = IconHelper.newHelper { null }
 
@@ -67,27 +66,35 @@ class DesktopFragment: BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewBinding.tileGroup.apply {
-            layoutManager = GridLayoutManager(
-                context, LSettings.getTileCol(context),
-                RecyclerView.VERTICAL, false).apply {
-                    spanSizeLookup = SpanSizeController(tileList)
-            }
-            addItemDecoration(tileDecoration)
+//            layoutManager = GridLayoutManager(
+//                context, LSettings.getTileCol(context),
+//                RecyclerView.VERTICAL, false).apply {
+//                    spanSizeLookup = SpanSizeController(tileList)
+//            }
+//            layoutManager = TileLayout(
+//                LSettings.getTileCol(context),
+//                orientation = RecyclerView.VERTICAL,
+//                infoProvider = TileLayoutController(
+//                    LSettings.getCreviceMode(context).dp.dp2px().toInt(),
+//                    tileList
+//                )
+//            )
+//            addItemDecoration(tileDecoration)
             adapter = TileAdapter(tileList, ::onTileClick, ::onTileLongClick)
         }
     }
 
     override fun onColorChanged() {
         super.onColorChanged()
-        tileDecoration.color = LColor.background
+//        tileDecoration.color = LColor.background
     }
 
     override fun onResume() {
         super.onResume()
         context?.let {
-            tileDecoration.setSpace(LSettings.getCreviceMode(it).dp.dp2px().toInt()) {
-                viewBinding.tileGroup.requestLayout()
-            }
+//            tileDecoration.setSpace(LSettings.getCreviceMode(it).dp.dp2px().toInt()) {
+//                viewBinding.tileGroup.requestLayout()
+//            }
         }
     }
 
@@ -98,13 +105,14 @@ class DesktopFragment: BaseFragment() {
     }
 
     private class SpanSizeController(
-        private val tileList: ArrayList<Tile>): GridLayoutManager.SpanSizeLookup() {
+        private val tileList: ArrayList<Tile>
+    ) : GridLayoutManager.SpanSizeLookup() {
         override fun getSpanSize(position: Int): Int {
             return tileList[position].size.width
         }
     }
 
-    private class TileDecoration(space: Int): DefaultItemDecoration(space) {
+    private class TileDecoration(space: Int) : DefaultItemDecoration(space) {
 
         private val tileBounds = Rect()
         private val tileOffset = Rect()
