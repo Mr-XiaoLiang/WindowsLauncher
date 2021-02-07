@@ -1,15 +1,9 @@
 package com.lollipop.windowslauncher.views
 
-import android.content.Context
 import android.graphics.Point
 import android.graphics.Rect
-import android.util.AttributeSet
-import android.view.View
 import android.view.ViewGroup
-import android.view.ViewGroup.MarginLayoutParams
-import android.widget.LinearLayout
 import androidx.recyclerview.widget.RecyclerView
-import com.lollipop.windowslauncher.tile.Tile
 import com.lollipop.windowslauncher.tile.TileSize
 import com.lollipop.windowslauncher.tile.TileType
 
@@ -17,14 +11,9 @@ import com.lollipop.windowslauncher.tile.TileType
  * @author lollipop
  * @date 1/31/21 21:09
  */
-class TileLayout(
-    context: Context,
-    attributeSet: AttributeSet?,
-    style: Int
-) : ViewGroup(context, attributeSet, style) {
-
-    constructor(context: Context, attributeSet: AttributeSet?): this(context, attributeSet, 0)
-    constructor(context: Context): this(context, null)
+class TileLayoutManager(
+    private val tileSizeProvider: ((Int) -> TileSize)
+) : RecyclerView.LayoutManager() {
 
     private var spanCount = 1
 
@@ -33,8 +22,6 @@ class TileLayout(
     private val lastList = ArrayList<Int>(spanCount)
 
     private val blockList = ArrayList<Block>()
-
-    private val tileAdapter: Adapter? = null
 
     fun setSpanCount(value: Int) {
         this.spanCount = value
@@ -114,45 +101,16 @@ class TileLayout(
         return Point(index, y)
     }
 
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        lastList.clear()
-        blockList.clear()
-        if (orientation == Orientation.Vertical) {
-            onMeasureVertical(widthMeasureSpec, heightMeasureSpec)
-        } else {
-            onMeasureHorizontal(widthMeasureSpec, heightMeasureSpec)
+    override fun onLayoutChildren(recycler: RecyclerView.Recycler?, state: RecyclerView.State?) {
+        recycler?:return
+        state?:return
+        if (itemCount == 0) {
+            detachAndScrapAttachedViews(recycler);
+            return;
         }
-    }
-
-    private fun onMeasureVertical(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-
-        val widthSize = MeasureSpec.getSize(widthMeasureSpec)
-        val tileWidth = (widthSize - paddingLeft - paddingRight) * 1F / spanCount
-
-        for (i in 0 until childCount) {
-
+        if (childCount == 0 && state.isPreLayout) {
+            return;
         }
-
-    }
-
-    private fun onMeasureHorizontal(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-
-    }
-
-    override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-        if (orientation == Orientation.Vertical) {
-            onLayoutVertical(r - l, b - t)
-        } else {
-            onLayoutHorizontal(r - l, b - t)
-        }
-    }
-
-    private fun onLayoutVertical(w: Int, h: Int) {
-
-    }
-
-    private fun onLayoutHorizontal(w: Int, h: Int) {
-
     }
 
     private class Block(
@@ -167,22 +125,15 @@ class TileLayout(
         Horizontal
     }
 
-    abstract class Adapter {
-
-        abstract val tileCount: Int
-
-        abstract fun createTile(tileType: TileType): Holder
-
-        abstract fun getTileType(position: Int): TileType
-
-        open fun bindTile(holder: Holder, tile: Tile) {
-            holder.bind(tile)
-        }
+    override fun isAutoMeasureEnabled(): Boolean {
+        return true
     }
 
-    interface Holder {
-        val view: View
-        fun bind(tile: Tile)
+    override fun generateDefaultLayoutParams(): RecyclerView.LayoutParams {
+        return RecyclerView.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
     }
 
 }
