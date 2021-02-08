@@ -106,10 +106,10 @@ class TileLayoutManager(
         state?:return
         if (itemCount == 0) {
             detachAndScrapAttachedViews(recycler);
-            return;
+            return
         }
         if (childCount == 0 && state.isPreLayout) {
-            return;
+            return
         }
     }
 
