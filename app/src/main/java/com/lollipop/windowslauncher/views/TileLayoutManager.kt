@@ -105,12 +105,26 @@ class TileLayoutManager(
         recycler?:return
         state?:return
         if (itemCount == 0) {
-            detachAndScrapAttachedViews(recycler);
+            detachAndScrapAttachedViews(recycler)
             return
         }
         if (childCount == 0 && state.isPreLayout) {
             return
         }
+
+        detachAndScrapAttachedViews(recycler)
+
+        layoutBounds(recycler)
+
+        layoutChildren(recycler)
+    }
+
+    private fun layoutBounds(recycler: RecyclerView.Recycler) {
+        // TODO
+    }
+
+    private fun layoutChildren(recycler: RecyclerView.Recycler) {
+        // TODO
     }
 
     private class Block(
