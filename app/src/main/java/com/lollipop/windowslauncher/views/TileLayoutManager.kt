@@ -120,6 +120,8 @@ class TileLayoutManager(
     }
 
     private fun layoutBounds(recycler: RecyclerView.Recycler) {
+        lastList.clear()
+        blockList.clear()
         // TODO
     }
 
