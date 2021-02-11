@@ -122,6 +122,21 @@ class TileLayoutManager(
     private fun layoutBounds(recycler: RecyclerView.Recycler) {
         lastList.clear()
         blockList.clear()
+        when (orientation) {
+            Orientation.Vertical -> {
+                layoutBoundsByVertical(recycler)
+            }
+            Orientation.Horizontal -> {
+                layoutBoundsByHorizontal(recycler)
+            }
+        }
+    }
+
+    private fun layoutBoundsByVertical(recycler: RecyclerView.Recycler) {
+        // TODO
+    }
+
+    private fun layoutBoundsByHorizontal(recycler: RecyclerView.Recycler) {
         // TODO
     }
 
