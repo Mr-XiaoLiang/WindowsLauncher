@@ -8,7 +8,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.lollipop.windowslauncher.listener.WindowInsetsHelper
-import com.lollipop.iconcore.ui.BaseFragment
+import com.lollipop.windowslauncher.base.BaseFragment
 import com.lollipop.windowslauncher.databinding.FragmentAppListBinding
 import com.lollipop.windowslauncher.databinding.ItemAppListBinding
 import com.lollipop.windowslauncher.databinding.ItemAppListKeyBinding

@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentStatePagerAdapter
-import com.lollipop.iconcore.ui.BaseFragment
+import com.lollipop.windowslauncher.base.BaseFragment
 import com.lollipop.windowslauncher.base.BaseActivity
 import com.lollipop.windowslauncher.databinding.ActivityMainBinding
 import com.lollipop.windowslauncher.fragment.AppListFragment

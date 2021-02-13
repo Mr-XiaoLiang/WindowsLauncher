@@ -1,16 +1,12 @@
 package com.lollipop.windowslauncher.fragment
 
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Paint
 import android.graphics.Rect
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.lollipop.iconcore.ui.BaseFragment
+import com.lollipop.windowslauncher.base.BaseFragment
 import com.lollipop.windowslauncher.databinding.FragmentDesktopBinding
 import com.lollipop.windowslauncher.tile.Tile
 import com.lollipop.windowslauncher.tile.TileAdapter
@@ -31,8 +27,6 @@ class DesktopFragment : BaseFragment() {
     private val viewBinding: FragmentDesktopBinding by lazyBind()
 
     private val tileList = ArrayList<Tile>()
-
-//    private val tileDecoration = TileDecoration(0)
 
     private val appHelper = IconHelper.newHelper { null }
 
@@ -78,44 +72,27 @@ class DesktopFragment : BaseFragment() {
                     tileList[it].size
                 },
                 insetsHelper
-            ).apply {
-                setStartPadding(
-                    24.dp2px().toInt(),
-                    24.dp2px().toInt(),
-                    24.dp2px().toInt(),
-                    24.dp2px().toInt(),
-                    )
-            }
+            )
             adapter = TileAdapter(tileList, ::onTileClick, ::onTileLongClick)
         }
     }
 
     override fun onColorChanged() {
         super.onColorChanged()
-//        tileDecoration.color = LColor.background
+        viewBinding.tileGroup.adapter?.notifyDataSetChanged()
     }
 
     override fun onResume() {
         super.onResume()
         context?.let {
-//            tileDecoration.setSpace(LSettings.getCreviceMode(it).dp.dp2px().toInt()) {
-//                viewBinding.tileGroup.requestLayout()
-//            }
         }
     }
 
     private fun onTileClick(tile: Tile) {
+
     }
 
     private fun onTileLongClick(tile: Tile) {
-    }
-
-    private class SpanSizeController(
-        private val tileList: ArrayList<Tile>
-    ) : GridLayoutManager.SpanSizeLookup() {
-        override fun getSpanSize(position: Int): Int {
-            return tileList[position].size.width
-        }
     }
 
     private class TileInsetsHelper(
@@ -164,37 +141,6 @@ class DesktopFragment : BaseFragment() {
             insets.set(left, top, right, bottom)
         }
 
-    }
-
-    private class TileDecoration(space: Int) : DefaultItemDecoration(space) {
-
-        private val tileBounds = Rect()
-        private val tileOffset = Rect()
-
-        private val paint = Paint().apply {
-            isAntiAlias = true
-        }
-
-        var color: Int
-            get() {
-                return paint.color
-            }
-            set(value) {
-                paint.color = value
-            }
-
-        override fun onDrawOver(c: Canvas, parent: RecyclerView, state: RecyclerView.State) {
-            val childCount = parent.childCount
-            for (i in 0 until childCount) {
-                val child = parent.getChildAt(i)
-                parent.getDecoratedBoundsWithMargins(child, tileBounds)
-                getItemOffsets(tileOffset, child, parent, state)
-                c.save()
-                c.clipRect(tileBounds)
-                c.drawRect(tileOffset, paint)
-                c.restore()
-            }
-        }
     }
 
 }

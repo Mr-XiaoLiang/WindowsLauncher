@@ -1,4 +1,4 @@
-package com.lollipop.iconcore.ui
+package com.lollipop.windowslauncher.base
 
 import android.content.Context
 import android.os.Bundle
@@ -6,7 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.lollipop.iconcore.listener.*
+import com.lollipop.windowslauncher.listener.*
 import com.lollipop.windowslauncher.theme.LColor
 import com.lollipop.windowslauncher.utils.identityCheck
 
@@ -21,10 +21,10 @@ import com.lollipop.windowslauncher.utils.identityCheck
  *
  */
 open class BaseFragment: Fragment(),
-        BackPressedListener,
-        BackPressedProvider,
-        OnWindowInsetsProvider,
-        OnWindowInsetsListener,
+    BackPressedListener,
+    BackPressedProvider,
+    OnWindowInsetsProvider,
+    OnWindowInsetsListener,
         LColor.OnColorChangeListener {
 
     /**

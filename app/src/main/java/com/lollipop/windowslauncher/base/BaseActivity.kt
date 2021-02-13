@@ -6,7 +6,7 @@ import android.view.View
 import android.view.WindowInsets
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
-import com.lollipop.iconcore.listener.*
+import com.lollipop.windowslauncher.listener.*
 import com.lollipop.windowslauncher.theme.LColor
 
 /**

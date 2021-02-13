@@ -1,4 +1,6 @@
-package com.lollipop.iconcore.listener
+package com.lollipop.windowslauncher.listener
+
+import com.lollipop.windowslauncher.listener.OnWindowInsetsListener
 
 /**
  * @author lollipop
