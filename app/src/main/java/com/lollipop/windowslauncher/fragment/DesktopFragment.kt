@@ -78,7 +78,14 @@ class DesktopFragment : BaseFragment() {
                     tileList[it].size
                 },
                 insetsHelper
-            )
+            ).apply {
+                setStartPadding(
+                    24.dp2px().toInt(),
+                    24.dp2px().toInt(),
+                    24.dp2px().toInt(),
+                    24.dp2px().toInt(),
+                    )
+            }
             adapter = TileAdapter(tileList, ::onTileClick, ::onTileLongClick)
         }
     }

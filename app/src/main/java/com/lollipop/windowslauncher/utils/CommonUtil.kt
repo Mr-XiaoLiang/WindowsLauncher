@@ -586,3 +586,17 @@ inline fun <T: View> T.visibleOrInvisible(boolean: Boolean, onVisible: (T.() -> 
         onVisible.invoke(this)
     }
 }
+
+fun Int.smallerThen(o: Int): Int {
+    if (this > o) {
+        return o
+    }
+    return this
+}
+
+fun Int.biggerThen(o: Int): Int {
+    if (this < o) {
+        return o
+    }
+    return this
+}

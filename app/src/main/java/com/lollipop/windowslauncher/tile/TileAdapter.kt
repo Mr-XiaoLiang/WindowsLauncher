@@ -16,8 +16,11 @@ class TileAdapter(
     private val onTileLongClick: (Tile) -> Unit,
     ): RecyclerView.Adapter<TileHolder<*>>() {
 
+    private var holderSize = 0
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TileHolder<*> {
-        log("onCreateViewHolder: ${TileType.values()[viewType]}")
+        holderSize++
+        log("onCreateViewHolder($holderSize): ${TileType.values()[viewType]}")
         return when (TileType.values()[viewType]) {
             TileType.App -> AppTileHolder(parent.bind(), ::onHolderClick, ::onHolderLongClick)
         }

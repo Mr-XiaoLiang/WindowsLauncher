@@ -5,10 +5,15 @@ import android.graphics.Rect
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.lollipop.windowslauncher.tile.TileSize
+import com.lollipop.windowslauncher.utils.biggerThen
+import com.lollipop.windowslauncher.utils.smallerThen
 
 /**
  * @author lollipop
  * @date 1/31/21 21:09
+ *
+ * 砖块的布局管理器
+ * 由于考虑到桌面的场景，因此暂未实现Item的复用
  */
 class TileLayoutManager(
     private var spanCount: Int,
@@ -16,15 +21,68 @@ class TileLayoutManager(
     insetProvider: InsetsProvider
 ) : RecyclerView.LayoutManager() {
 
+    private var orientation = Orientation.Vertical
+
+    private val layoutInsets = Rect()
+
+    private var scrollOffset = 0
+
+    private val maxScrollOffset: Int
+        get() {
+            return (layoutHelper.getContentLength(tileSideLength)
+                    - height
+                    + startOffsetByOrientation(orientation)
+                    + endOffsetByOrientation(orientation))
+        }
+
+    private val tileSideLength: Int
+        get() {
+            return if (orientation.isVertical) {
+                width / spanCount
+            } else {
+                height / spanCount
+            }
+        }
+
+    private val boundsStart: Int
+        get() {
+            return scrollOffset
+        }
+
+    private val boundsEnd: Int
+        get() {
+            return boundsStart + height
+        }
+
     private val layoutHelper = TileLayoutHelper(
         ::spanCount,
         ::getItemCount,
         ::orientation,
         tileSizeProvider,
-        insetProvider
+        insetProvider,
     )
 
-    private var orientation = Orientation.Vertical
+    private fun startOffsetByOrientation(o: Orientation): Int {
+        if (o != orientation) {
+            return 0
+        }
+        return if (o.isVertical) {
+            layoutInsets.top
+        } else {
+            layoutInsets.left
+        }
+    }
+
+    private fun endOffsetByOrientation(o: Orientation): Int {
+        if (o != orientation) {
+            return 0
+        }
+        return if (o.isVertical) {
+            layoutInsets.bottom
+        } else {
+            layoutInsets.right
+        }
+    }
 
     fun setSpanCount(value: Int) {
         this.spanCount = value
@@ -34,6 +92,10 @@ class TileLayoutManager(
     fun setOrientation(value: Orientation) {
         this.orientation = value
         requestLayout()
+    }
+
+    fun setStartPadding(left: Int, top: Int, right: Int, bottom: Int) {
+        layoutInsets.set(left, top, right, bottom)
     }
 
     override fun onLayoutChildren(recycler: RecyclerView.Recycler?, state: RecyclerView.State?) {
@@ -59,16 +121,15 @@ class TileLayoutManager(
     }
 
     private fun layoutChildren(recycler: RecyclerView.Recycler) {
-        val allWidth = width
-        val allHeight = height
-        val tileWidth = if (orientation.isVertical) {
-            allWidth / spanCount
-        } else {
-            allHeight / spanCount
-        }
+        val tileWidth = tileSideLength
+        val verticalOffset = startOffsetByOrientation(Orientation.Vertical)
+        val horizontalOffset = startOffsetByOrientation(Orientation.Horizontal)
         for (i in 0 until itemCount) {
-            val view = recycler.getViewForPosition(i)
             val block = layoutHelper.getBlock(i)
+            if (!block.isActive) {
+                continue
+            }
+            val view = recycler.getViewForPosition(i)
             val usedWidth = if (orientation.isVertical) {
                 (spanCount - block.size.width) * tileWidth
             } else {
@@ -83,10 +144,10 @@ class TileLayoutManager(
             measureChild(view, usedWidth + block.insetHorizontal, usedHeight + block.insetVertical)
             layoutDecorated(
                 view,
-                block.getLeft(tileWidth),
-                block.getTop(tileWidth),
-                block.getRight(tileWidth),
-                block.getBottom(tileWidth),
+                block.getLeft(tileWidth) + horizontalOffset,
+                block.getTop(tileWidth) + verticalOffset,
+                block.getRight(tileWidth) + horizontalOffset,
+                block.getBottom(tileWidth) + verticalOffset,
             )
         }
     }
@@ -120,6 +181,40 @@ class TileLayoutManager(
         return !orientation.isVertical
     }
 
+    override fun scrollVerticallyBy(
+        dy: Int,
+        recycler: RecyclerView.Recycler?,
+        state: RecyclerView.State?
+    ): Int {
+        recycler ?: return 0
+        val offset = checkScrollOffset(dy, recycler)
+        offsetChildrenVertical(offset * -1)
+        return offset
+    }
+
+    override fun scrollHorizontallyBy(
+        dx: Int,
+        recycler: RecyclerView.Recycler?,
+        state: RecyclerView.State?
+    ): Int {
+        recycler ?: return 0
+        val offset = checkScrollOffset(dx, recycler)
+        offsetChildrenHorizontal(offset * -1)
+        return offset
+    }
+
+    private fun checkScrollOffset(offset: Int, recycler: RecyclerView.Recycler): Int {
+        var newOffset = scrollOffset + offset
+        if (newOffset < 0) {
+            newOffset = 0
+        } else if (newOffset > maxScrollOffset) {
+            newOffset = maxScrollOffset
+        }
+        val actual = newOffset - scrollOffset
+        scrollOffset = newOffset
+        return actual
+    }
+
     class TileLayoutHelper(
         private val spanCountProvider: () -> Int,
         private val itemCountProvider: () -> Int,
@@ -151,11 +246,13 @@ class TileLayoutManager(
 
         private val blockList = ArrayList<Block>()
 
+        private var contentLength = 0
+
         private fun getLast(index: Int): Int {
-            if (index < 0 || index >= spanCount) {
-                return 0
-            }
-            if (index >= lastList.size) {
+            if (index < 0
+                || index >= spanCount
+                || index >= lastList.size
+            ) {
                 return 0
             }
             return lastList[index]
@@ -183,6 +280,9 @@ class TileLayoutManager(
                 min = point.y
                 max = min + size.height
                 last = point.x + size.width
+            }
+            if (contentLength < last) {
+                contentLength = last
             }
             for (i in min until max) {
                 setLast(i, last)
@@ -220,6 +320,7 @@ class TileLayoutManager(
         }
 
         fun relayout() {
+            contentLength = 0
             lastList.clear()
             blockList.clear()
             val insets = Rect()
@@ -248,12 +349,17 @@ class TileLayoutManager(
             return blockList[index]
         }
 
+        fun getContentLength(tileWidth: Int): Int {
+            return contentLength * tileWidth
+        }
+
         data class Block(
-            var x: Int,
-            var y: Int,
-            var size: TileSize,
-            var insets: Rect = Rect()
+            val x: Int,
+            val y: Int,
+            val size: TileSize,
+            val insets: Rect = Rect()
         ) {
+
             fun getLeft(tileWidth: Int): Int {
                 return x * tileWidth + insets.left
             }
@@ -269,6 +375,11 @@ class TileLayoutManager(
             fun getBottom(tileWidth: Int): Int {
                 return (y + size.height) * tileWidth - insets.bottom
             }
+
+            val isActive: Boolean
+                get() {
+                    return x >= 0 && y >= 0
+                }
 
             val insetHorizontal: Int
                 get() {
