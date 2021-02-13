@@ -1,6 +1,7 @@
 package com.lollipop.windowslauncher.views
 
 import android.graphics.Rect
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
@@ -155,6 +156,11 @@ class TileLayoutManager(
         layoutInsets.set(left, top, right, bottom)
     }
 
+    override fun requestLayout() {
+        super.requestLayout()
+        scrollOffset = 0
+    }
+
     override fun onLayoutChildren(recycler: RecyclerView.Recycler?, state: RecyclerView.State?) {
         recycler ?: return
         state ?: return
@@ -177,6 +183,13 @@ class TileLayoutManager(
         layoutHelper.relayout()
     }
 
+    /**
+     * child的滑动用的是{@View offsetTopAndBottom(Int)}的方法
+     * 也就是说，是直接对View做偏移量，那么处理滑动时的复用，
+     * 就需要检查View的位置，然后移除它，同时添加新的View
+     * 由于RecyclerView本身不记录位置，那么我们添加的时候，应该遵照当前显示的位置
+     * 同时，布局后的位置应该是滑动前的（先排版，后滑动）
+     */
     private fun layoutChildren(recycler: RecyclerView.Recycler) {
         val tileWidth = tileSideLength
         val verticalOffset = startOffsetByOrientation(Orientation.Vertical)
@@ -187,23 +200,19 @@ class TileLayoutManager(
                 continue
             }
             val view = recycler.getViewForPosition(i)
-            val usedWidth = if (orientation.isVertical) {
-                (spanCount - block.size.width) * tileWidth
-            } else {
-                block.x
-            }
-            val usedHeight = if (orientation.isVertical) {
-                block.y
-            } else {
-                (spanCount - block.size.height) * tileWidth
-            }
             addView(view)
             if (view is TileItemShell) {
                 view.setOrientation(orientation)
             }
-            measureChild(view, usedWidth + block.insetHorizontal, usedHeight + block.insetVertical)
-            layoutDecorated(
-                view,
+            view.measure(
+                View.MeasureSpec.makeMeasureSpec(
+                    block.size.width * tileWidth - block.insetHorizontal,
+                    View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(
+                    block.size.height * tileWidth - block.insetVertical,
+                    View.MeasureSpec.EXACTLY),
+            )
+            view.layout(
                 block.getLeft(tileWidth) + horizontalOffset,
                 block.getTop(tileWidth) + verticalOffset,
                 block.getRight(tileWidth) + horizontalOffset,
@@ -237,7 +246,7 @@ class TileLayoutManager(
         state: RecyclerView.State?
     ): Int {
         recycler ?: return 0
-        val offset = checkScrollOffset(dy, recycler)
+        val offset = checkScrollOffsetBy(dy)
         offsetChildrenVertical(offset * -1)
         return offset
     }
@@ -248,15 +257,13 @@ class TileLayoutManager(
         state: RecyclerView.State?
     ): Int {
         recycler ?: return 0
-        val offset = checkScrollOffset(dx, recycler)
+        val offset = checkScrollOffsetBy(dx)
         offsetChildrenHorizontal(offset * -1)
         return offset
     }
 
-    private fun checkScrollOffset(offset: Int, recycler: RecyclerView.Recycler): Int {
-        val actual = checkScrollOffset(scrollOffset + offset)
-        // TODO item复用时在此处添加或移除item
-        return actual
+    private fun checkScrollOffsetBy(offset: Int): Int {
+        return checkScrollOffset(scrollOffset + offset)
     }
 
     private fun checkScrollOffset(offset: Int): Int {

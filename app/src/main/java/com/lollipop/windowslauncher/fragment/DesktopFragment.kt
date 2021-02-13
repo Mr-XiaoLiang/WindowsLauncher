@@ -7,16 +7,17 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.ItemTouchUIUtil
+import androidx.recyclerview.widget.RecyclerView
 import com.lollipop.windowslauncher.base.BaseFragment
 import com.lollipop.windowslauncher.databinding.FragmentDesktopBinding
-import com.lollipop.windowslauncher.tile.Orientation
-import com.lollipop.windowslauncher.tile.Tile
-import com.lollipop.windowslauncher.tile.TileAdapter
-import com.lollipop.windowslauncher.tile.TileSize
+import com.lollipop.windowslauncher.tile.*
 import com.lollipop.windowslauncher.tile.impl.AppTile
 import com.lollipop.windowslauncher.utils.*
 import com.lollipop.windowslauncher.views.TileLayoutManager
 import java.util.*
+import java.util.Collection
 import kotlin.collections.ArrayList
 
 /**
@@ -93,6 +94,7 @@ class DesktopFragment : BaseFragment() {
                 )
             }
             adapter = TileAdapter(tileList, ::onTileClick, ::onTileLongClick)
+            TileTouchHelper.bind(this, ::onItemSwap)
         }
     }
 
@@ -110,10 +112,6 @@ class DesktopFragment : BaseFragment() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-    }
-
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         viewBinding.tileGroup.layoutManager?.let {
@@ -127,6 +125,15 @@ class DesktopFragment : BaseFragment() {
                 )
             }
         }
+    }
+
+    private fun onItemSwap(viewHolder: RecyclerView.ViewHolder,
+                           target: RecyclerView.ViewHolder): Boolean {
+        val from = viewHolder.adapterPosition
+        val to = target.adapterPosition
+        Collections.swap(tileList, from, to)
+        viewBinding.tileGroup.adapter?.notifyItemMoved(from, to)
+        return true
     }
 
     private fun onTileClick(tile: Tile) {
@@ -180,6 +187,54 @@ class DesktopFragment : BaseFragment() {
                 }
             }
             insets.set(left, top, right, bottom)
+        }
+
+    }
+
+    private class TileTouchHelper(
+        private val swapCallback: (viewHolder: RecyclerView.ViewHolder,
+                                   target: RecyclerView.ViewHolder) -> Boolean
+    ): ItemTouchHelper.Callback() {
+
+        companion object {
+            fun bind(view: RecyclerView,
+                     swapCallback: (viewHolder: RecyclerView.ViewHolder,
+                                    target: RecyclerView.ViewHolder) -> Boolean) {
+                val tileTouchHelper = TileTouchHelper(swapCallback)
+                ItemTouchHelper(tileTouchHelper).attachToRecyclerView(view)
+            }
+        }
+
+        override fun getMovementFlags(
+            recyclerView: RecyclerView,
+            viewHolder: RecyclerView.ViewHolder
+        ): Int {
+            var dragFlag = ItemTouchHelper.UP or
+                    ItemTouchHelper.DOWN or
+                    ItemTouchHelper.LEFT or
+                    ItemTouchHelper.RIGHT or
+                    ItemTouchHelper.START or
+                    ItemTouchHelper.END
+            val swipeFlag = 0
+            if (viewHolder is TileHolder<*> && !viewHolder.canDrag) {
+                dragFlag = 0
+            }
+            return makeMovementFlags(
+                dragFlag,
+                swipeFlag
+            )
+        }
+
+        override fun onMove(
+            recyclerView: RecyclerView,
+            viewHolder: RecyclerView.ViewHolder,
+            target: RecyclerView.ViewHolder
+        ): Boolean {
+            return swapCallback(viewHolder, target)
+        }
+
+        override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+            // 不处理，因为不允许滑动
         }
 
     }

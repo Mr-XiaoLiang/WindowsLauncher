@@ -3,7 +3,7 @@ package com.lollipop.windowslauncher.views
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View
-import android.widget.FrameLayout
+import android.view.ViewGroup
 import com.lollipop.windowslauncher.tile.Orientation
 import com.lollipop.windowslauncher.tile.TileSize
 
@@ -15,10 +15,16 @@ class TileItemShell(
     context: Context,
     attributeSet: AttributeSet?,
     style: Int
-): FrameLayout(context, attributeSet, style) {
+): ViewGroup(context, attributeSet, style) {
 
     companion object {
-        fun shellWith(view: View): TileItemShell {
+
+        private const val enable = false
+
+        fun shellWith(view: View): View {
+            if (!enable) {
+                return view
+            }
             val tileItemShell = TileItemShell(view.context)
             tileItemShell.addView(view)
             tileItemShell.layoutParams = LayoutParams(
@@ -57,18 +63,33 @@ class TileItemShell(
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val widthSpec: Int
+        val heightSpec: Int
         if (orientation.isVertical) {
             val widthSize = MeasureSpec.getSize(widthMeasureSpec)
-            super.onMeasure(
-                MeasureSpec.makeMeasureSpec(widthSize, MeasureSpec.EXACTLY),
-                MeasureSpec.makeMeasureSpec((widthSize * ratio).toInt(), MeasureSpec.EXACTLY),
-            )
+            widthSpec = MeasureSpec.makeMeasureSpec(widthSize, MeasureSpec.EXACTLY)
+            heightSpec = MeasureSpec.makeMeasureSpec((widthSize * ratio).toInt(), MeasureSpec.EXACTLY)
         } else {
             val heightSize = MeasureSpec.getSize(heightMeasureSpec)
-            super.onMeasure(
-                MeasureSpec.makeMeasureSpec((heightSize / ratio).toInt(), MeasureSpec.EXACTLY),
-                MeasureSpec.makeMeasureSpec(heightSize, MeasureSpec.EXACTLY),
-            )
+            widthSpec = MeasureSpec.makeMeasureSpec((heightSize / ratio).toInt(), MeasureSpec.EXACTLY)
+            heightSpec = MeasureSpec.makeMeasureSpec(heightSize, MeasureSpec.EXACTLY)
+        }
+        for (i in 0 until childCount) {
+            val child = getChildAt(i)
+            child.measure(widthSpec, heightSpec)
+        }
+        setMeasuredDimension(
+            MeasureSpec.getSize(widthSpec),
+            MeasureSpec.getSize(heightSpec),
+        )
+    }
+
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        val w = right - left
+        val h = bottom - top
+        for (i in 0 until childCount) {
+            val child = getChildAt(i)
+            child.layout(0, 0, w, h)
         }
     }
 

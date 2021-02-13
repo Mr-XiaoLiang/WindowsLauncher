@@ -159,6 +159,20 @@ class TileLayoutHelper(
         val insets: Rect = Rect()
     ) {
 
+        val isActive: Boolean
+            get() {
+                return x >= 0 && y >= 0
+            }
+
+        val insetHorizontal: Int
+            get() {
+                return insets.left + insets.right
+            }
+        val insetVertical: Int
+            get() {
+                return insets.top + insets.bottom
+            }
+
         fun getLeft(tileWidth: Int): Int {
             return x * tileWidth + insets.left
         }
@@ -174,20 +188,6 @@ class TileLayoutHelper(
         fun getBottom(tileWidth: Int): Int {
             return (y + size.height) * tileWidth - insets.bottom
         }
-
-        val isActive: Boolean
-            get() {
-                return x >= 0 && y >= 0
-            }
-
-        val insetHorizontal: Int
-            get() {
-                return insets.left + insets.right
-            }
-        val insetVertical: Int
-            get() {
-                return insets.top + insets.bottom
-            }
     }
 
 }

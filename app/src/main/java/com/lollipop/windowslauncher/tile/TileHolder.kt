@@ -23,6 +23,8 @@ abstract class TileHolder<T: Tile>(
         }
     }
 
+    open val canDrag: Boolean = true
+
     fun bind(tile: T) {
         if (itemView is TileItemShell) {
             itemView.setTileSize(tile.size)
