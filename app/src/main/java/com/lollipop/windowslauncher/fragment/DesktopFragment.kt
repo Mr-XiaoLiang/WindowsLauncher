@@ -17,6 +17,7 @@ import com.lollipop.windowslauncher.tile.TileAdapter
 import com.lollipop.windowslauncher.tile.TileSize
 import com.lollipop.windowslauncher.tile.impl.AppTile
 import com.lollipop.windowslauncher.utils.*
+import com.lollipop.windowslauncher.views.TileLayoutManager
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -34,6 +35,8 @@ class DesktopFragment : BaseFragment() {
 //    private val tileDecoration = TileDecoration(0)
 
     private val appHelper = IconHelper.newHelper { null }
+
+    private val insetsHelper = TileInsetsHelper(0, 0)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,20 +69,16 @@ class DesktopFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewBinding.tileGroup.apply {
-//            layoutManager = GridLayoutManager(
-//                context, LSettings.getTileCol(context),
-//                RecyclerView.VERTICAL, false).apply {
-//                    spanSizeLookup = SpanSizeController(tileList)
-//            }
-//            layoutManager = TileLayout(
-//                LSettings.getTileCol(context),
-//                orientation = RecyclerView.VERTICAL,
-//                infoProvider = TileLayoutController(
-//                    LSettings.getCreviceMode(context).dp.dp2px().toInt(),
-//                    tileList
-//                )
-//            )
-//            addItemDecoration(tileDecoration)
+            val tileCol = LSettings.getTileCol(context)
+            insetsHelper.spanCount = tileCol
+            insetsHelper.space = LSettings.getCreviceMode(context).dp.dp2px().toInt()
+            layoutManager = TileLayoutManager(
+                tileCol,
+                {
+                    tileList[it].size
+                },
+                insetsHelper
+            )
             adapter = TileAdapter(tileList, ::onTileClick, ::onTileLongClick)
         }
     }
@@ -110,6 +109,54 @@ class DesktopFragment : BaseFragment() {
         override fun getSpanSize(position: Int): Int {
             return tileList[position].size.width
         }
+    }
+
+    private class TileInsetsHelper(
+        var space: Int,
+        var spanCount: Int
+    ) : TileLayoutManager.InsetsProvider {
+
+        override fun getInsets(
+            insets: Rect,
+            x: Int,
+            y: Int,
+            size: TileSize,
+            orientation: TileLayoutManager.Orientation
+        ) {
+            val half = space * 0.5F
+            val halfUp = (half + 0.5F).toInt()
+            val halfDown = half.toInt()
+            val left = if (x == 0) {
+                space
+            } else {
+                halfDown
+            }
+            val top = if (y == 0) {
+                space
+            } else {
+                halfDown
+            }
+            val right = if (orientation.isVertical) {
+                if (x + size.width == spanCount) {
+                    space
+                } else {
+                    halfUp
+                }
+            } else {
+                halfUp
+            }
+            val bottom = if (orientation.isVertical) {
+                halfUp
+            } else {
+                if (y + size.height == spanCount) {
+                    space
+                } else {
+                    halfUp
+                }
+            }
+            insets.set(left, top, right, bottom)
+        }
+
     }
 
     private class TileDecoration(space: Int) : DefaultItemDecoration(space) {

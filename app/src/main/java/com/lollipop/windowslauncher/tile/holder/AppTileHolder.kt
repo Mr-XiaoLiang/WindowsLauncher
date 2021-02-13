@@ -19,7 +19,7 @@ class AppTileHolder(
 
     override fun onBind(tile: AppTile) {
         viewBinding.tileName.visibleOrGone(
-            tile.size == TileSize.S) {
+            tile.size != TileSize.S) {
             text = tile.appInfo.getLabel(context)
         }
         viewBinding.appIcon.load(tile.appInfo)
