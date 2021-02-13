@@ -1,6 +1,7 @@
 package com.lollipop.windowslauncher.fragment
 
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.Rect
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -8,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.lollipop.windowslauncher.base.BaseFragment
 import com.lollipop.windowslauncher.databinding.FragmentDesktopBinding
+import com.lollipop.windowslauncher.tile.Orientation
 import com.lollipop.windowslauncher.tile.Tile
 import com.lollipop.windowslauncher.tile.TileAdapter
 import com.lollipop.windowslauncher.tile.TileSize
@@ -48,7 +50,7 @@ class DesktopFragment : BaseFragment() {
         for (i in 0 until appCount) {
             val appInfo = appHelper.getAppInfo(i)
             tileList.add(AppTile(appInfo).apply {
-                size = tileSizeValues[random.nextInt(tileSizeValues.size)]
+                size = tileSizeValues[i % tileSizeValues.size]
             })
         }
         viewBinding.tileGroup.adapter?.notifyDataSetChanged()
@@ -63,7 +65,16 @@ class DesktopFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewBinding.tileGroup.apply {
-            val tileCol = LSettings.getTileCol(context)
+            val heightPixels = resources.displayMetrics.heightPixels
+            val widthPixels = resources.displayMetrics.widthPixels
+            val isVertical = heightPixels > widthPixels
+            val horizontalToVertical = LSettings.isHorizontalToVertical(context)
+            val tileCol = if (horizontalToVertical && !isVertical) {
+                val srcCol = LSettings.getTileCol(context)
+                (widthPixels * 1F / heightPixels * srcCol).toInt()
+            } else {
+                LSettings.getTileCol(context)
+            }
             insetsHelper.spanCount = tileCol
             insetsHelper.space = LSettings.getCreviceMode(context).dp.dp2px().toInt()
             layoutManager = TileLayoutManager(
@@ -72,7 +83,15 @@ class DesktopFragment : BaseFragment() {
                     tileList[it].size
                 },
                 insetsHelper
-            )
+            ).apply {
+                setOrientation(
+                    if (isVertical || horizontalToVertical) {
+                        Orientation.Vertical
+                    } else {
+                        Orientation.Horizontal
+                    }
+                )
+            }
             adapter = TileAdapter(tileList, ::onTileClick, ::onTileLongClick)
         }
     }
@@ -82,9 +101,31 @@ class DesktopFragment : BaseFragment() {
         viewBinding.tileGroup.adapter?.notifyDataSetChanged()
     }
 
+    override fun onInsetsChange(root: View, left: Int, top: Int, right: Int, bottom: Int) {
+        super.onInsetsChange(root, left, top, right, bottom)
+        viewBinding.tileGroup.layoutManager?.let {
+            if (it is TileLayoutManager) {
+                it.setStartPadding(left, top, right, bottom)
+            }
+        }
+    }
+
     override fun onResume() {
         super.onResume()
-        context?.let {
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        viewBinding.tileGroup.layoutManager?.let {
+            if (it is TileLayoutManager) {
+                it.setOrientation(
+                    if (newConfig.screenHeightDp > newConfig.screenWidthDp) {
+                        Orientation.Vertical
+                    } else {
+                        Orientation.Horizontal
+                    }
+                )
+            }
         }
     }
 
@@ -105,7 +146,7 @@ class DesktopFragment : BaseFragment() {
             x: Int,
             y: Int,
             size: TileSize,
-            orientation: TileLayoutManager.Orientation
+            orientation: Orientation
         ) {
             val half = space * 0.5F
             val halfUp = (half + 0.5F).toInt()

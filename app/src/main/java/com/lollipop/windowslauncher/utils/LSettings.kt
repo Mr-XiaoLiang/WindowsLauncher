@@ -21,15 +21,25 @@ object LSettings {
 
     private const val KEY_CREVICE_MODE = "KEY_CREVICE_MODE"
 
+    private const val KEY_HORIZONTAL_TO_VERTICAL = "KEY_HORIZONTAL_TO_VERTICAL"
+
     const val TILE_COL_MAX = 12
 
     const val TILE_COL_MIN = 6
+
+    fun setHorizontalToVertical(context: Context, value: Boolean) {
+        context[KEY_HORIZONTAL_TO_VERTICAL] = value
+    }
+
+    fun isHorizontalToVertical(context: Context): Boolean {
+        return context[KEY_HORIZONTAL_TO_VERTICAL, true]
+    }
 
     fun setTileCol(context: Context, col: Int) {
         context[KEY_TILE_COL] = col.range(TILE_COL_MIN, TILE_COL_MAX)
     }
 
-    fun getTileCol(context: Context, ): Int {
+    fun getTileCol(context: Context): Int {
         return context[KEY_TILE_COL, TILE_COL_MIN].range(TILE_COL_MIN, TILE_COL_MAX)
     }
 

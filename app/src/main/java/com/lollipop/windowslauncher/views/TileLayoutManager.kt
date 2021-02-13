@@ -1,12 +1,13 @@
 package com.lollipop.windowslauncher.views
 
-import android.graphics.Point
 import android.graphics.Rect
 import android.view.ViewGroup
+import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
+import com.lollipop.windowslauncher.tile.Orientation
+import com.lollipop.windowslauncher.tile.TileLayoutHelper
 import com.lollipop.windowslauncher.tile.TileSize
 import com.lollipop.windowslauncher.utils.biggerThen
-import com.lollipop.windowslauncher.utils.smallerThen
 
 /**
  * @author lollipop
@@ -21,20 +22,49 @@ class TileLayoutManager(
     insetProvider: InsetsProvider
 ) : RecyclerView.LayoutManager() {
 
+    /**
+     * 方向
+     */
     private var orientation = Orientation.Vertical
 
+    /**
+     * 窗口缩进
+     * 仅用于布局的开始及结束
+     */
     private val layoutInsets = Rect()
 
+    /**
+     * 滑动距离的计数器
+     */
     private var scrollOffset = 0
 
+    /**
+     * 最大的可滑动距离
+     */
     private val maxScrollOffset: Int
         get() {
             return (layoutHelper.getContentLength(tileSideLength)
-                    - height
+                    - boundsLength
                     + startOffsetByOrientation(orientation)
-                    + endOffsetByOrientation(orientation))
+                    + endOffsetByOrientation(orientation)).biggerThen(0)
         }
 
+    /**
+     * 边界长度
+     * 不同的布局模式下的参照物是不同的
+     */
+    private val boundsLength: Int
+        get() {
+            return if (orientation.isVertical) {
+                height
+            } else {
+                width
+            }
+        }
+
+    /**
+     * 磁块的大小
+     */
     private val tileSideLength: Int
         get() {
             return if (orientation.isVertical) {
@@ -44,16 +74,28 @@ class TileLayoutManager(
             }
         }
 
+    /**
+     * 布局边界的位置
+     * 相对于滑动而言
+     */
     private val boundsStart: Int
         get() {
             return scrollOffset
         }
 
+    /**
+     * 滑动布局的边界
+     * 相对于滑动而言
+     */
     private val boundsEnd: Int
         get() {
-            return boundsStart + height
+            return boundsStart + boundsLength
         }
 
+    /**
+     * 布局辅助器
+     * 磁块的位置计算及测量在这里进行
+     */
     private val layoutHelper = TileLayoutHelper(
         ::spanCount,
         ::getItemCount,
@@ -62,6 +104,9 @@ class TileLayoutManager(
         insetProvider,
     )
 
+    /**
+     * 根据方向获取开始方向的初始偏移量
+     */
     private fun startOffsetByOrientation(o: Orientation): Int {
         if (o != orientation) {
             return 0
@@ -73,6 +118,9 @@ class TileLayoutManager(
         }
     }
 
+    /**
+     * 根据方向获取结束方向的初始偏移量
+     */
     private fun endOffsetByOrientation(o: Orientation): Int {
         if (o != orientation) {
             return 0
@@ -84,12 +132,21 @@ class TileLayoutManager(
         }
     }
 
+    /**
+     * 重新设置列数
+     */
     fun setSpanCount(value: Int) {
         this.spanCount = value
         requestLayout()
     }
 
+    /**
+     * 重新设置方向
+     */
     fun setOrientation(value: Orientation) {
+        if (this.orientation == value) {
+            return
+        }
         this.orientation = value
         requestLayout()
     }
@@ -141,6 +198,9 @@ class TileLayoutManager(
                 (spanCount - block.size.height) * tileWidth
             }
             addView(view)
+            if (view is TileItemShell) {
+                view.setOrientation(orientation)
+            }
             measureChild(view, usedWidth + block.insetHorizontal, usedHeight + block.insetVertical)
             layoutDecorated(
                 view,
@@ -150,16 +210,6 @@ class TileLayoutManager(
                 block.getBottom(tileWidth) + verticalOffset,
             )
         }
-    }
-
-    enum class Orientation {
-        Vertical,
-        Horizontal;
-
-        val isVertical: Boolean
-            get() {
-                return this == Vertical
-            }
     }
 
     override fun isAutoMeasureEnabled(): Boolean {
@@ -204,8 +254,14 @@ class TileLayoutManager(
     }
 
     private fun checkScrollOffset(offset: Int, recycler: RecyclerView.Recycler): Int {
-        var newOffset = scrollOffset + offset
-        if (newOffset < 0) {
+        val actual = checkScrollOffset(scrollOffset + offset)
+        // TODO item复用时在此处添加或移除item
+        return actual
+    }
+
+    private fun checkScrollOffset(offset: Int): Int {
+        var newOffset = offset
+            if (newOffset < 0) {
             newOffset = 0
         } else if (newOffset > maxScrollOffset) {
             newOffset = maxScrollOffset
@@ -215,182 +271,27 @@ class TileLayoutManager(
         return actual
     }
 
-    class TileLayoutHelper(
-        private val spanCountProvider: () -> Int,
-        private val itemCountProvider: () -> Int,
-        private val orientationProvider: () -> Orientation,
-        private val tileSizeProvider: ((Int) -> TileSize),
-        private val insetProvider: InsetsProvider,
+    override fun scrollToPosition(position: Int) {
+        if (position < 0 || position >= itemCount || itemCount == 0) {
+            return
+        }
+        val block = layoutHelper.getBlock(position)
+        if (orientation.isVertical) {
+            offsetChildrenVertical(checkScrollOffset(block.getTop(tileSideLength)) * -1)
+        } else {
+            offsetChildrenHorizontal(checkScrollOffset(block.getLeft(tileSideLength)) * -1)
+        }
+    }
+
+    override fun smoothScrollToPosition(
+        recyclerView: RecyclerView?,
+        state: RecyclerView.State?,
+        position: Int
     ) {
-
-        companion object {
-            private val EMPTY = Block(-1, -1, TileSize.S)
-        }
-
-        private val spanCount: Int
-            get() {
-                return spanCountProvider()
-            }
-
-        private val itemCount: Int
-            get() {
-                return itemCountProvider()
-            }
-
-        private val orientation: Orientation
-            get() {
-                return orientationProvider()
-            }
-
-        private val lastList = ArrayList<Int>(spanCount)
-
-        private val blockList = ArrayList<Block>()
-
-        private var contentLength = 0
-
-        private fun getLast(index: Int): Int {
-            if (index < 0
-                || index >= spanCount
-                || index >= lastList.size
-            ) {
-                return 0
-            }
-            return lastList[index]
-        }
-
-        private fun setLast(index: Int, v: Int) {
-            if (index < 0 || index >= spanCount) {
-                return
-            }
-            while (lastList.size < spanCount) {
-                lastList.add(0)
-            }
-            lastList[index] = v
-        }
-
-        private fun addBlock(point: Point, size: TileSize, insets: Rect) {
-            val min: Int
-            val max: Int
-            val last: Int
-            if (orientation.isVertical) {
-                min = point.x
-                max = min + size.width
-                last = point.y + size.height
-            } else {
-                min = point.y
-                max = min + size.height
-                last = point.x + size.width
-            }
-            if (contentLength < last) {
-                contentLength = last
-            }
-            for (i in min until max) {
-                setLast(i, last)
-            }
-            blockList.add(Block(point.x, point.y, size, insets))
-        }
-
-        /**
-         * 寻找一个可用的空间
-         */
-        private fun findSpace(span: Int): Point {
-            var index = -1
-            var offset = -1
-            for (i in 0 until spanCount) {
-                if (i + span > spanCount) {
-                    break
-                }
-                var min = -1
-                // 取从此处开始最大的值
-                for (k in 0 until span) {
-                    val last = getLast(i + k)
-                    if (min < last) {
-                        min = last
-                    }
-                }
-                if (index < 0 ||
-                    offset < 0 ||
-                    (min in 0 until offset && offset > min)
-                ) {
-                    index = i
-                    offset = min
-                }
-            }
-            return Point(index, offset)
-        }
-
-        fun relayout() {
-            contentLength = 0
-            lastList.clear()
-            blockList.clear()
-            val insets = Rect()
-            for (i in 0 until itemCount) {
-                val tileSize = tileSizeProvider(i)
-                val space = findSpace(
-                    if (orientation.isVertical) {
-                        tileSize.width
-                    } else {
-                        tileSize.height
-                    }
-                )
-                if (space.x < 0 || space.y < 0) {
-                    continue
-                }
-                insets.set(0, 0, 0, 0)
-                insetProvider.getInsets(insets, space.x, space.y, tileSize, orientation)
-                addBlock(space, tileSize, Rect(insets))
-            }
-        }
-
-        fun getBlock(index: Int): Block {
-            if (index < 0 || index >= blockList.size) {
-                return EMPTY
-            }
-            return blockList[index]
-        }
-
-        fun getContentLength(tileWidth: Int): Int {
-            return contentLength * tileWidth
-        }
-
-        data class Block(
-            val x: Int,
-            val y: Int,
-            val size: TileSize,
-            val insets: Rect = Rect()
-        ) {
-
-            fun getLeft(tileWidth: Int): Int {
-                return x * tileWidth + insets.left
-            }
-
-            fun getTop(tileWidth: Int): Int {
-                return y * tileWidth + insets.top
-            }
-
-            fun getRight(tileWidth: Int): Int {
-                return (x + size.width) * tileWidth - insets.right
-            }
-
-            fun getBottom(tileWidth: Int): Int {
-                return (y + size.height) * tileWidth - insets.bottom
-            }
-
-            val isActive: Boolean
-                get() {
-                    return x >= 0 && y >= 0
-                }
-
-            val insetHorizontal: Int
-                get() {
-                    return insets.left + insets.right
-                }
-            val insetVertical: Int
-                get() {
-                    return insets.top + insets.bottom
-                }
-        }
-
+        recyclerView?:return
+        startSmoothScroll(LinearSmoothScroller(recyclerView.context).apply {
+            targetPosition = position
+        })
     }
 
     fun interface InsetsProvider {

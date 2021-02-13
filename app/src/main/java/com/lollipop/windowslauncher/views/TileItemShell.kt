@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import android.widget.FrameLayout
+import com.lollipop.windowslauncher.tile.Orientation
 import com.lollipop.windowslauncher.tile.TileSize
 
 /**
@@ -33,6 +34,8 @@ class TileItemShell(
 
     private var tileSize = TileSize.M
 
+    private var orientation = Orientation.Vertical
+
     /**
      * 宽度相对于高度的比例
      * w / h = ratio
@@ -49,12 +52,24 @@ class TileItemShell(
         }
     }
 
+    fun setOrientation(orientation: Orientation) {
+        this.orientation = orientation
+    }
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val widthSize = MeasureSpec.getSize(widthMeasureSpec)
-        super.onMeasure(
-            MeasureSpec.makeMeasureSpec(widthSize, MeasureSpec.EXACTLY),
-            MeasureSpec.makeMeasureSpec((widthSize * ratio).toInt(), MeasureSpec.EXACTLY),
-        )
+        if (orientation.isVertical) {
+            val widthSize = MeasureSpec.getSize(widthMeasureSpec)
+            super.onMeasure(
+                MeasureSpec.makeMeasureSpec(widthSize, MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec((widthSize * ratio).toInt(), MeasureSpec.EXACTLY),
+            )
+        } else {
+            val heightSize = MeasureSpec.getSize(heightMeasureSpec)
+            super.onMeasure(
+                MeasureSpec.makeMeasureSpec((heightSize / ratio).toInt(), MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(heightSize, MeasureSpec.EXACTLY),
+            )
+        }
     }
 
 }
