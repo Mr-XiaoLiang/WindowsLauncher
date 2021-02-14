@@ -15,7 +15,7 @@ class TileViewHelper(
     private val lowestLine = LowestLine(::spanCount)
     private val checkerboard = Checkerboard()
 
-    fun reLayout() {
+    fun relayout() {
         lowestLine.clear()
         checkerboard.clear()
         // 检查并记录位置
