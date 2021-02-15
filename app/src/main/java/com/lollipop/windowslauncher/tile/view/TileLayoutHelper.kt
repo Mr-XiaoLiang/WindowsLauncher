@@ -1,19 +1,34 @@
-package com.lollipop.windowslauncher.tile
+package com.lollipop.windowslauncher.tile.view
 
 import android.graphics.Point
+import com.lollipop.windowslauncher.tile.TileSize
 import com.lollipop.windowslauncher.utils.Checkerboard
 
 /**
  * @author lollipop
  * @date 2/14/21 20:10
  */
-class TileViewHelper(
-    private var spanCount: Int,
-    private val blockProvider: (Int) -> Block
+class TileLayoutHelper(
+    private val spanCountProvider: () -> Int,
+    private val tileCountProvider: () -> Int,
+    private val sizeProvider: (Int) -> TileSize
 ) {
 
-    private val lowestLine = LowestLine(::spanCount)
+    companion object {
+        private val EMPTY = Block()
+    }
+
+    private val spanCount: Int
+        get() {
+            return spanCountProvider()
+        }
+    private val tileCount: Int
+        get() {
+            return tileCountProvider()
+        }
+    private val lowestLine = LowestLine(spanCountProvider)
     private val checkerboard = Checkerboard()
+    private val blockList = ArrayList<Block>()
 
     fun relayout() {
         lowestLine.clear()
@@ -32,16 +47,50 @@ class TileViewHelper(
                 }
             }
         }
+        removeEmptyLine()
+
+        layoutFreeBlock()
+    }
+
+    fun onTileAdded() {
+        layoutFreeBlock()
+    }
+
+    fun onTileRemoved() {
+        removeEmptyLine()
+    }
+
+    fun getBlock(index: Int): Block {
+        if (index < 0 || index >= blockList.size) {
+            return EMPTY
+        }
+        return blockList[index]
+    }
+
+    fun clear() {
+        lowestLine.clear()
+        checkerboard.clear()
+        blockList.clear()
+    }
+
+    private fun removeEmptyLine() {
         // 移除空行
         do {
             val index = checkerboard.findEmptyLine()
             if (index >= 0) {
                 checkerboard.removeLine(index)
                 lowestLine.removeLine(index)
-                offsetBlockY(index, -1)
+                for (i in 0 until spanCount) {
+                    val block = getBlock(i)
+                    if (block.y > index) {
+                        block.offsetY(-1)
+                    }
+                }
             }
         } while (index >= 0)
+    }
 
+    private fun layoutFreeBlock() {
         // 重组游离的块
         forEachBlock { _, block ->
             if (!block.hasLayout) {
@@ -83,15 +132,6 @@ class TileViewHelper(
         return Point(index, offset)
     }
 
-    private fun offsetBlockY(limit: Int, offset: Int) {
-        for (i in 0 until spanCount) {
-            val block = blockProvider(i)
-            if (block.y > limit) {
-                block.offsetY(offset)
-            }
-        }
-    }
-
     private fun checkLayout(block: Block): Boolean {
         return checkerboard.contains(block.x, block.y, block.size.width, block.size.height)
     }
@@ -108,9 +148,12 @@ class TileViewHelper(
     }
 
     private fun forEachBlock(run: (index: Int, block: Block) -> Unit) {
-        for (i in 0 until spanCount) {
-            val block = blockProvider(i)
-            run(i, block)
+        while (blockList.size < tileCount) {
+            blockList.add(Block())
+        }
+        for (i in 0 until tileCount) {
+            blockList[i].size = sizeProvider(i)
+            run(i, blockList[i])
         }
     }
 
@@ -171,11 +214,13 @@ class TileViewHelper(
 
     }
 
-    data class Block(
-        var x: Int = -1,
-        var y: Int = -1,
+    class Block {
+
+        var x: Int = -1
+            private set
+        var y: Int = -1
+            private set
         var size: TileSize = TileSize.S
-    ) {
 
         val hasLayout: Boolean
             get() {
