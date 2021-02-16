@@ -11,7 +11,7 @@ class Checkerboard {
 
     companion object {
 
-        private const val LINE_MAX = 32
+        const val LINE_MAX = 32
 
         private const val LINE_FAST = LINE_MAX - 1
 
