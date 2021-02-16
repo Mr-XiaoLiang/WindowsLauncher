@@ -20,7 +20,6 @@ import java.lang.RuntimeException
  * - 位置撑开
  * - 空行移除
  * - 重叠纠正
- * -
  */
 class TileLayoutHelper(
     private val spanCountProvider: () -> Int,
@@ -202,8 +201,7 @@ class TileLayoutHelper(
      * 并且通过回调函数传递出去
      * 目的在于方便UI进行更新同步（只变更变化的部分）
      */
-    fun diff(
-        snapshot: Snapshot,
+    fun diff(snapshot: Snapshot,
         run: (index: Int, offsetX: Int, offsetY: Int) -> Unit
     ) {
         forEachBlock { index, block ->
