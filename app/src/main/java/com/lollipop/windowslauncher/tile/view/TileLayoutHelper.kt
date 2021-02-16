@@ -60,6 +60,38 @@ class TileLayoutHelper(
         removeEmptyLine()
     }
 
+    fun onTileInsert(index: Int) {
+
+    }
+
+    fun getSnapshot(): Snapshot {
+        val snapshot = Snapshot()
+        forEachBlock { _, block ->
+            snapshot.add(block.x, block.y)
+        }
+        snapshot.lock()
+        return snapshot
+    }
+
+    fun diff(
+        snapshot: Snapshot,
+        run: (index: Int, offsetX: Int, offsetY: Int) -> Unit
+    ) {
+        forEachBlock { index, block ->
+            if (index < snapshot.size) {
+                val readX = snapshot.readX(index)
+                val readY = snapshot.readY(index)
+                if (readX != block.x || readY != block.y) {
+                    run(
+                        index,
+                        block.x - readX,
+                        block.y - readY
+                    )
+                }
+            }
+        }
+    }
+
     fun getBlock(index: Int): Block {
         if (index < 0 || index >= blockList.size) {
             return EMPTY
@@ -71,6 +103,26 @@ class TileLayoutHelper(
         lowestLine.clear()
         checkerboard.clear()
         blockList.clear()
+    }
+
+    fun restore(run: (index: Int, block: Block) -> Unit) {
+        clear()
+        for (i in 0 until tileCount) {
+            val block = Block()
+            run(i, block)
+        }
+        relayout()
+    }
+
+    fun restore(snapshot: Snapshot) {
+        restore { index, block ->
+            if (index < snapshot.size) {
+                block.appoint(
+                    snapshot.readX(index),
+                    snapshot.readY(index)
+                )
+            }
+        }
     }
 
     private fun removeEmptyLine() {
@@ -100,7 +152,8 @@ class TileLayoutHelper(
                     block.appoint(space)
                     checkerboard.put(block.x, block.y, span, block.size.height)
                     lowestLine.addLast(
-                        block.x, span, block.y + block.size.height)
+                        block.x, span, block.y + block.size.height
+                    )
                 }
             }
         }
@@ -169,7 +222,8 @@ class TileLayoutHelper(
         operator fun get(index: Int): Int {
             if (index < 0
                 || index >= spanCount
-                || index >= lineList.size) {
+                || index >= lineList.size
+            ) {
                 return 0
             }
             return lineList[index]
@@ -215,7 +269,6 @@ class TileLayoutHelper(
     }
 
     class Block {
-
         var x: Int = -1
             private set
         var y: Int = -1
@@ -237,9 +290,44 @@ class TileLayoutHelper(
         }
 
         fun appoint(point: Point) {
-            this.x = point.x
-            this.y = point.y
+            appoint(point.x, point.y)
         }
+
+        fun appoint(x: Int, y: Int) {
+            this.x = x
+            this.y = y
+        }
+    }
+
+    class Snapshot {
+
+        private var isLock = false
+
+        private val locationList = ArrayList<IntArray>()
+
+        fun add(x: Int, y: Int) {
+            if (isLock) {
+                return
+            }
+            locationList.add(intArrayOf(x, y))
+        }
+
+        fun readX(line: Int): Int {
+            return locationList[line][0]
+        }
+
+        fun readY(line: Int): Int {
+            return locationList[line][1]
+        }
+
+        fun lock() {
+            this.isLock = true
+        }
+
+        val size: Int
+            get() {
+                return locationList.size
+            }
 
     }
 
