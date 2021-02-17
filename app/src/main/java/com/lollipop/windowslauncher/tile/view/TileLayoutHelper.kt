@@ -30,6 +30,10 @@ class TileLayoutHelper(
     companion object {
         private val EMPTY = Block()
         private val TEMP_BLOCK = Block()
+
+        fun tileWidth(width: Int, spanCount: Int, space: Int): Int {
+            return (width - space) / spanCount - space
+        }
     }
 
     /**
@@ -75,6 +79,14 @@ class TileLayoutHelper(
      * 它的位置会在内部被确定，并且作为依据提供给外部
      */
     private val blockList = ArrayList<Block>()
+
+    /**
+     * 最大行数
+     */
+    val maxLine: Int
+        get() {
+            return lowestLine.maxLine
+        }
 
     fun relayout() {
         lowestLine.clear()
@@ -275,6 +287,13 @@ class TileLayoutHelper(
                 )
             }
         }
+    }
+
+    /**
+     * 内容物的高度计算
+     */
+    fun contentHeight(tileWidth: Int, space: Int): Int {
+        return (tileWidth + space) * lowestLine.maxLine + space
     }
 
     private fun removeEmptyLine() {
@@ -484,6 +503,38 @@ class TileLayoutHelper(
             block.x = this.x
             block.y = this.y
             block.size = this.size
+        }
+
+        fun left(tileWidth: Int, space: Int): Int {
+            return tileEdge(tileWidth, space, x)
+        }
+
+        fun top(tileWidth: Int, space: Int): Int {
+            return tileEdge(tileWidth, space, y)
+        }
+
+        fun right(tileWidth: Int, space: Int): Int {
+            return left(tileWidth, space) + width(tileWidth, space)
+        }
+
+        fun bottom(tileWidth: Int, space: Int): Int {
+            return top(tileWidth, space) + height(tileWidth, space)
+        }
+
+        private fun tileEdge(tileWidth: Int, space: Int, index: Int): Int {
+            return (tileWidth + space) * index + space
+        }
+
+        fun width(tileWidth: Int, space: Int): Int {
+            return sideLength(tileWidth, space, size.width)
+        }
+
+        fun height(tileWidth: Int, space: Int): Int {
+            return sideLength(tileWidth, space, size.height)
+        }
+
+        private fun sideLength(tileWidth: Int, space: Int, span: Int): Int {
+            return (tileWidth + space) * span - space
         }
 
     }

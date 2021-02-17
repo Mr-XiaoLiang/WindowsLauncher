@@ -42,6 +42,10 @@ class TileViewHelper(private val tileView: TileView) : TileView {
         myTile = tile
     }
 
+    override fun moveTo(x: Int, y: Int, delay: Long) {
+        TODO("Not yet implemented")
+    }
+
     fun notifyTileChange() {
         myTile?.let {
             tileView.bind(it)

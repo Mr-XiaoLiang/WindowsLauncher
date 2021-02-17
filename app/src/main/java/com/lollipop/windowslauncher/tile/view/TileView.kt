@@ -38,6 +38,9 @@ interface TileView {
      */
     fun onBind(tile: Tile)
 
-
+    /**
+     * 移动至
+     */
+    fun moveTo(x: Int, y: Int, delay: Long = 0)
 
 }
