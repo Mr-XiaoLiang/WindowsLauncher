@@ -9,9 +9,9 @@ import com.lollipop.windowslauncher.base.BaseFragment
 import com.lollipop.windowslauncher.databinding.FragmentDesktopBinding
 import com.lollipop.windowslauncher.tile.Tile
 import com.lollipop.windowslauncher.tile.TileSize
+import com.lollipop.windowslauncher.tile.TileViewCreator
 import com.lollipop.windowslauncher.tile.impl.AppTile
 import com.lollipop.windowslauncher.utils.*
-import java.util.*
 import kotlin.collections.ArrayList
 
 /**
@@ -37,7 +37,6 @@ class DesktopFragment : BaseFragment() {
         super.onAttach(context)
         appHelper.loadAppInfo(context)
         val tileSizeValues = TileSize.values()
-        val random = Random()
         val appCount = appHelper.appCount.range(0, 30)
         log("appCount = $appCount")
         for (i in 0 until appCount) {
@@ -59,12 +58,14 @@ class DesktopFragment : BaseFragment() {
         viewBinding.tileGroup.apply {
             space = LSettings.getCreviceMode(context).dp.dp2px().toInt()
             spanCount = LSettings.getTileCol(context)
+            bindCreator(TileViewCreator())
             addTile(tileList)
         }
     }
 
     override fun onColorChanged() {
         super.onColorChanged()
+        viewBinding.tileGroup.notifyTileChanged()
     }
 
     override fun onInsetsChange(root: View, left: Int, top: Int, right: Int, bottom: Int) {
@@ -73,10 +74,12 @@ class DesktopFragment : BaseFragment() {
 
     override fun onResume() {
         super.onResume()
+        viewBinding.tileGroup.onResume()
     }
 
     override fun onPause() {
         super.onPause()
+        viewBinding.tileGroup.onPause()
     }
 
 }

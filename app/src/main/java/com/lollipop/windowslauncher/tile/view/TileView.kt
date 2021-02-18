@@ -21,7 +21,7 @@ abstract class TileView<T : Tile>(context: Context) : ViewGroup(context) {
     /**
      * 磁块的View辅助工具
      */
-    protected val tileViewHelper by lazy {
+    private val tileViewHelper by lazy {
         TileViewHelper(this)
     }
 

@@ -115,6 +115,10 @@ class TileLayout(
         tileLayoutHelper.notifyTileAdded()
     }
 
+    fun bindCreator(creator: TileCreator) {
+        this.tileCreator = creator
+    }
+
     private fun addTileView(tile: Tile) {
         val view = getTileView(tile)?:return
         tileList.add(tile)
@@ -144,6 +148,17 @@ class TileLayout(
         isActive = false
         for (i in 0 until childCount) {
             checkViewStatus(getChildAt(i))
+        }
+    }
+
+    fun notifyTileChanged() {
+        tileLayoutHelper.relayout()
+        for (i in 0 until childCount) {
+            getChildAt(i)?.let {
+                if (it is TileView<*>) {
+                    it.notifyTileChange()
+                }
+            }
         }
     }
 
