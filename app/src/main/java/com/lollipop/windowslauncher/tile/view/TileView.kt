@@ -11,7 +11,7 @@ import com.lollipop.windowslauncher.tile.Tile
  * @date 2/15/21 16:40
  * 磁块展示的View
  */
-abstract class TileView (context: Context): ViewGroup(context) {
+abstract class TileView<T : Tile>(context: Context) : ViewGroup(context) {
 
     /**
      * 磁块布局的id
@@ -54,16 +54,21 @@ abstract class TileView (context: Context): ViewGroup(context) {
     /**
      * 绑定tile数据
      */
+    @Suppress("UNCHECKED_CAST")
     fun bind(tile: Tile) {
         this.setBackgroundColor(LColor.tileBackground)
         tileViewHelper.onBind(tile)
-        onBind(tile)
+        try {
+            onBind(tile as T)
+        } catch (e: Throwable) {
+            e.printStackTrace()
+        }
     }
 
     /**
      * 绑定tile数据
      */
-    abstract fun onBind(tile: Tile)
+    abstract fun onBind(tile: T)
 
     /**
      * 移动至

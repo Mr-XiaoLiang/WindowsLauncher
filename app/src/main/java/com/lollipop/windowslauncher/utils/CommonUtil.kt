@@ -550,6 +550,16 @@ inline fun <reified T: ViewBinding> bind(layoutInflater: LayoutInflater): T {
     throw InflateException("Cant inflate ViewBinding ${bindingClass.name}")
 }
 
+inline fun <reified T: ViewBinding> View.withThis(): T {
+    val bindingClass = T::class.java
+    val bindMethod = bindingClass.getMethod("bind", View::class.java)
+    val bindObj = bindMethod.invoke(null, this)
+    if (bindObj is T) {
+        return bindObj
+    }
+    throw InflateException("Cant inflate ViewBinding ${bindingClass.name}")
+}
+
 inline fun <reified T: Any> Fragment.identityCheck(ctx: Context? = null, run: (T) -> Unit) {
     // 父碎片第一优先
     if (check(parentFragment, run)) {

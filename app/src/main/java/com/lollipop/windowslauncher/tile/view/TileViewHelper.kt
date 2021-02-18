@@ -14,7 +14,7 @@ import com.lollipop.windowslauncher.utils.task
  * @date 2/15/21 17:11
  * 磁块的View辅助类
  */
-class TileViewHelper(private val tileView: TileView) {
+class TileViewHelper(private val tileView: TileView<*>) {
 
     companion object {
         const val ANIMATION_DURATION_SHORT = 150L

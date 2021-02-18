@@ -119,7 +119,7 @@ class TileLayout(
         val view = getTileView(tile)?:return
         tileList.add(tile)
         addView(view)
-        if (view is TileView) {
+        if (view is TileView<*>) {
             view.bind(tile)
             checkViewStatus(view)
         }
@@ -148,7 +148,7 @@ class TileLayout(
     }
 
     private fun checkViewStatus(view: View) {
-        if (view is TileView) {
+        if (view is TileView<*>) {
             if (isActive && view.visibility == View.VISIBLE) {
                 view.onResume()
             } else {

@@ -69,14 +69,15 @@ class IconImageView(context: Context, attr: AttributeSet?, defStyle: Int):
      * 包含一个异步的drawable加载过程
      */
     fun loadAppIcon(icon: IconHelper.AppInfo) {
-        if (icon.iconIsLoaded) {
-            setIconDrawable(icon.loadIcon(context))
+        val drawable = icon.optIcon()
+        if (drawable != null) {
+            setIconDrawable(drawable)
             return
         }
         doAsync {
-            val drawable = icon.loadIcon(context)
+            val newDrawable = icon.loadIcon(context)
             onUI {
-                setIconDrawable(drawable)
+                setIconDrawable(newDrawable)
             }
         }
     }
