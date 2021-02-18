@@ -105,11 +105,17 @@ class TileLayout(
 
     fun addTile(tiles: List<Tile>) {
         for (tile in tiles) {
-            addTile(tile)
+            addTileView(tile)
         }
+        tileLayoutHelper.notifyTileAdded()
     }
 
     fun addTile(tile: Tile) {
+        addTileView(tile)
+        tileLayoutHelper.notifyTileAdded()
+    }
+
+    private fun addTileView(tile: Tile) {
         val view = getTileView(tile)?:return
         tileList.add(tile)
         addView(view)
@@ -117,7 +123,6 @@ class TileLayout(
             view.bind(tile)
             checkViewStatus(view)
         }
-        tileLayoutHelper.notifyTileAdded()
     }
 
     /**
@@ -153,11 +158,11 @@ class TileLayout(
     }
 
     private fun getTileView(tile: Tile): View? {
-        return tileCreator?.createTile(tile)
+        return tileCreator?.createTile(tile, context)
     }
 
     fun interface TileCreator {
-        fun createTile(tile: Tile): View
+        fun createTile(tile: Tile, context: Context): View
     }
 
 }

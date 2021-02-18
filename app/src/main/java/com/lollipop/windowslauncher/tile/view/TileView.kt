@@ -1,6 +1,8 @@
 package com.lollipop.windowslauncher.tile.view
 
-import android.view.View
+import android.content.Context
+import android.view.LayoutInflater
+import android.view.ViewGroup
 import com.lollipop.windowslauncher.theme.LColor
 import com.lollipop.windowslauncher.tile.Tile
 
@@ -9,38 +11,91 @@ import com.lollipop.windowslauncher.tile.Tile
  * @date 2/15/21 16:40
  * 磁块展示的View
  */
-interface TileView {
+abstract class TileView (context: Context): ViewGroup(context) {
+
+    /**
+     * 磁块布局的id
+     */
+    abstract val tileLayoutId: Int
+
+    /**
+     * 磁块的View辅助工具
+     */
+    protected val tileViewHelper by lazy {
+        TileViewHelper(this)
+    }
+
+    init {
+        initTileShell()
+    }
+
+    private fun initTileShell() {
+        if (tileLayoutId != 0) {
+            LayoutInflater.from(context).inflate(tileLayoutId, this)
+        }
+    }
 
     /**
      * 磁块的View可能包含动画
      * 需要在View被展示时激活
      */
-    fun onResume()
+    open fun onResume() {
+        tileViewHelper.onResume()
+    }
 
     /**
      * 磁块的View可能包含动画
      * 需要在View被隐藏时暂停
      */
-    fun onPause()
+    open fun onPause() {
+        tileViewHelper.onPause()
+    }
 
     /**
      * 绑定tile数据
      */
     fun bind(tile: Tile) {
-        if (this is View) {
-            this.setBackgroundColor(LColor.tileBackground)
-        }
+        this.setBackgroundColor(LColor.tileBackground)
+        tileViewHelper.onBind(tile)
         onBind(tile)
     }
 
     /**
      * 绑定tile数据
      */
-    fun onBind(tile: Tile)
+    abstract fun onBind(tile: Tile)
 
     /**
      * 移动至
      */
-    fun moveTo(x: Int, y: Int, delay: Long = 0)
+    open fun moveTo(x: Int, y: Int, delay: Long = 0) {
+        tileViewHelper.moveTo(x, y, delay)
+    }
 
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        var maxWidth = 0
+        var maxHeight = 0
+        for (i in 0 until childCount) {
+            getChildAt(i)?.let {
+                it.measure(widthMeasureSpec, heightMeasureSpec)
+                if (it.measuredWidth > maxWidth) {
+                    maxWidth = it.measuredWidth
+                }
+                if (it.measuredHeight > maxHeight) {
+                    maxHeight = it.measuredHeight
+                }
+            }
+        }
+        setMeasuredDimension(maxWidth, maxHeight)
+    }
+
+    override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+        val w = width
+        val h = height
+        for (i in 0 until childCount) {
+            getChildAt(i)?.let {
+                it.layout(0, 0, w, h)
+            }
+        }
+    }
 }

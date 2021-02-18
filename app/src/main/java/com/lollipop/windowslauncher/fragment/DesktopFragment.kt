@@ -10,10 +10,7 @@ import com.lollipop.windowslauncher.databinding.FragmentDesktopBinding
 import com.lollipop.windowslauncher.tile.Tile
 import com.lollipop.windowslauncher.tile.TileSize
 import com.lollipop.windowslauncher.tile.impl.AppTile
-import com.lollipop.windowslauncher.utils.IconHelper
-import com.lollipop.windowslauncher.utils.lazyBind
-import com.lollipop.windowslauncher.utils.log
-import com.lollipop.windowslauncher.utils.range
+import com.lollipop.windowslauncher.utils.*
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -59,6 +56,11 @@ class DesktopFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        viewBinding.tileGroup.apply {
+            space = LSettings.getCreviceMode(context).dp.dp2px().toInt()
+            spanCount = LSettings.getTileCol(context)
+            addTile(tileList)
+        }
     }
 
     override fun onColorChanged() {

@@ -11,7 +11,7 @@ import com.lollipop.windowslauncher.tile.Tile
  * @date 2/15/21 17:11
  * 磁块的View辅助类
  */
-class TileViewHelper(private val tileView: TileView) : TileView {
+class TileViewHelper(private val tileView: TileView) {
 
     companion object {
         const val ANIMATION_DURATION_SHORT = 150L
@@ -26,23 +26,23 @@ class TileViewHelper(private val tileView: TileView) : TileView {
 
     private var myTile: Tile? = null
 
-    override fun onResume() {
+    fun onResume() {
         tileAnimatorList.forEach {
             it.start()
         }
     }
 
-    override fun onPause() {
+    fun onPause() {
         tileAnimatorList.forEach {
             it.stop()
         }
     }
 
-    override fun onBind(tile: Tile) {
+    fun onBind(tile: Tile) {
         myTile = tile
     }
 
-    override fun moveTo(x: Int, y: Int, delay: Long) {
+    fun moveTo(x: Int, y: Int, delay: Long) {
         TODO("Not yet implemented")
     }
 
