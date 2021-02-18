@@ -72,6 +72,20 @@ abstract class TileView (context: Context): ViewGroup(context) {
         tileViewHelper.moveTo(x, y, delay)
     }
 
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        tileViewHelper.onAttached()
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        tileViewHelper.onDetached()
+    }
+
+    fun notifyTileChange() {
+        tileViewHelper.notifyTileChange()
+    }
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         var maxWidth = 0
         var maxHeight = 0
