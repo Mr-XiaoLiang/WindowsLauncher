@@ -550,12 +550,12 @@ inline fun <reified T: ViewBinding> bind(layoutInflater: LayoutInflater): T {
     throw InflateException("Cant inflate ViewBinding ${bindingClass.name}")
 }
 
-inline fun <reified T: ViewBinding> View.withThis(): T {
+inline fun <reified T: ViewBinding> View.withThis(): Lazy<T> = lazy {
     val bindingClass = T::class.java
     val bindMethod = bindingClass.getMethod("bind", View::class.java)
     val bindObj = bindMethod.invoke(null, this)
     if (bindObj is T) {
-        return bindObj
+        return@lazy bindObj
     }
     throw InflateException("Cant inflate ViewBinding ${bindingClass.name}")
 }

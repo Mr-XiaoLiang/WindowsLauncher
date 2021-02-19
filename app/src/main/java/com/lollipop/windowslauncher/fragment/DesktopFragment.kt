@@ -30,7 +30,6 @@ class DesktopFragment : BaseFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         log("onCreate")
-
     }
 
     override fun onAttach(context: Context) {
@@ -59,7 +58,9 @@ class DesktopFragment : BaseFragment() {
             space = LSettings.getCreviceMode(context).dp.dp2px().toInt()
             spanCount = LSettings.getTileCol(context)
             bindCreator(TileViewCreator())
-            addTile(tileList)
+            delay(1000L) {
+                addTile(tileList)
+            }
         }
     }
 

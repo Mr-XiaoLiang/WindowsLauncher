@@ -3,8 +3,10 @@ package com.lollipop.windowslauncher.tile.view
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.viewbinding.ViewBinding
 import com.lollipop.windowslauncher.theme.LColor
 import com.lollipop.windowslauncher.tile.Tile
+import com.lollipop.windowslauncher.utils.withThis
 
 /**
  * @author lollipop
@@ -54,12 +56,18 @@ abstract class TileView<T : Tile>(context: Context) : ViewGroup(context) {
     /**
      * 绑定tile数据
      */
-    @Suppress("UNCHECKED_CAST")
     fun bind(tile: Tile) {
         this.setBackgroundColor(LColor.tileBackground)
         tileViewHelper.onBind(tile)
+        bindTileInfo(tile)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun bindTileInfo(tile: Tile?) {
         try {
-            onBind(tile as T)
+            if (tile != null && isAttachedToWindow) {
+                onBind(tile as T)
+            }
         } catch (e: Throwable) {
             e.printStackTrace()
         }
@@ -80,6 +88,7 @@ abstract class TileView<T : Tile>(context: Context) : ViewGroup(context) {
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         tileViewHelper.onAttached()
+        notifyTileChange()
     }
 
     override fun onDetachedFromWindow() {
