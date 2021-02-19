@@ -526,18 +526,19 @@ inline fun <reified T : ViewBinding> Fragment.lazyBind(): Lazy<T> = lazy { bind(
 inline fun <reified T : ViewBinding> View.lazyBind(): Lazy<T> = lazy { bind() }
 
 inline fun <reified T : ViewBinding> Activity.bind(): T {
-    return bind(this.layoutInflater)
+    return this.layoutInflater.bind()
 }
 
 inline fun <reified T : ViewBinding> Fragment.bind(): T {
-    return bind(this.layoutInflater)
+    return this.layoutInflater.bind()
 }
 
 inline fun <reified T : ViewBinding> View.bind(): T {
-    return bind(LayoutInflater.from(this.context))
+    return LayoutInflater.from(this.context).bind()
 }
 
-inline fun <reified T : ViewBinding> bind(layoutInflater: LayoutInflater): T {
+inline fun <reified T : ViewBinding> LayoutInflater.bind(): T {
+    val layoutInflater: LayoutInflater = this
     val bindingClass = T::class.java
     val inflateMethod = bindingClass.getMethod("inflate", LayoutInflater::class.java)
     val invokeObj = inflateMethod.invoke(null, layoutInflater)
@@ -547,10 +548,10 @@ inline fun <reified T : ViewBinding> bind(layoutInflater: LayoutInflater): T {
     throw InflateException("Cant inflate ViewBinding ${bindingClass.name}")
 }
 
-inline fun <reified T : ViewBinding> View.withThis(layoutId: Int = 0): Lazy<T> = lazy {
+inline fun <reified T : ViewBinding> View.withThis(inflate: Boolean = false): Lazy<T> = lazy {
     val bindingClass = T::class.java
     val view: View = this
-    if (view is ViewGroup && layoutId != 0) {
+    if (view is ViewGroup && inflate) {
         val bindMethod = bindingClass.getMethod(
             "inflate",
             LayoutInflater::class.java,

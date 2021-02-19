@@ -1,7 +1,6 @@
 package com.lollipop.windowslauncher.tile.tileView
 
 import android.content.Context
-import com.lollipop.windowslauncher.R
 import com.lollipop.windowslauncher.databinding.ItemTileAppBinding
 import com.lollipop.windowslauncher.theme.LColor
 import com.lollipop.windowslauncher.tile.TileSize
@@ -17,7 +16,7 @@ import com.lollipop.windowslauncher.utils.withThis
  */
 class AppTileView(context: Context) : TileView<AppTile>(context) {
 
-    private val viewBinding: ItemTileAppBinding by withThis(R.layout.item_tile_app)
+    private val viewBinding: ItemTileAppBinding by withThis(true)
 
     override fun onBind(tile: AppTile) {
         viewBinding.appIcon.load(tile.appInfo)
