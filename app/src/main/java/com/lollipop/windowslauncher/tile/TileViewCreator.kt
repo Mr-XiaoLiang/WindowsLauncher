@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.View
 import com.lollipop.windowslauncher.tile.tileView.AppTileView
 import com.lollipop.windowslauncher.tile.view.TileLayout
+import com.lollipop.windowslauncher.tile.view.TileView
 
 /**
  * @author lollipop
@@ -11,7 +12,7 @@ import com.lollipop.windowslauncher.tile.view.TileLayout
  */
 class TileViewCreator: TileLayout.TileCreator {
 
-    override fun createTile(tile: Tile, context: Context): View {
+    override fun createTile(tile: Tile, context: Context): TileView<*> {
         when(tile.tileType) {
             TileType.App -> {
                 return AppTileView(context)

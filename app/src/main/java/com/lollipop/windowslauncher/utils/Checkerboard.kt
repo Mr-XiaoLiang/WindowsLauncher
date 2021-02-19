@@ -77,7 +77,8 @@ class Checkerboard {
             throw IndexOutOfBoundsException("The maximum x is 31")
         }
         // 棋盘太小，不存在
-        if (gridMap.size <= top || top < 0 || left < 0) {
+        if (top < 0 || left < 0 || width < 1
+            || height < 1 || gridMap.size <= (height + top)) {
             return false
         }
         for (y in 0 until height) {

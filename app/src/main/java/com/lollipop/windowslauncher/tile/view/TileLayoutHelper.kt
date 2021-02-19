@@ -3,7 +3,6 @@ package com.lollipop.windowslauncher.tile.view
 import android.graphics.Point
 import com.lollipop.windowslauncher.tile.TileSize
 import com.lollipop.windowslauncher.utils.Checkerboard
-import com.lollipop.windowslauncher.utils.log
 import java.lang.RuntimeException
 
 /**
@@ -423,7 +422,6 @@ class TileLayoutHelper(
         }
 
         fun addLast(index: Int, span: Int, value: Int) {
-            log("addLast: index=$index, span=$span, value=$value")
             for (i in 0 until span) {
                 val old = get(index + i)
                 if (old < value) {
@@ -462,7 +460,7 @@ class TileLayoutHelper(
 
         val hasLayout: Boolean
             get() {
-                return x < 0 || y < 0
+                return x >= 0 || y >= 0
             }
 
         fun resetLayout() {
@@ -481,7 +479,6 @@ class TileLayoutHelper(
         fun appoint(x: Int, y: Int) {
             this.x = x
             this.y = y
-            log("appoint: $x $y")
         }
 
         fun overlap(left: Int, right: Int): Boolean {

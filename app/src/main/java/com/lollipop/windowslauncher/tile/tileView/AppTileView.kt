@@ -17,14 +17,14 @@ import com.lollipop.windowslauncher.utils.withThis
  */
 class AppTileView(context: Context) : TileView<AppTile>(context) {
 
-    override val tileLayoutId = R.layout.item_tile_app
-
-    private val viewBinding: ItemTileAppBinding by withThis()
+    private val viewBinding: ItemTileAppBinding by withThis(R.layout.item_tile_app)
 
     override fun onBind(tile: AppTile) {
         viewBinding.appIcon.load(tile.appInfo)
         viewBinding.tileName.visibleOrGone(tile.size != TileSize.S) {
-            tile.loadLabel(context) { text = it }
+            tile.loadLabel(context) {
+                text = it
+            }
             setTextColor(LColor.foreground)
         }
     }

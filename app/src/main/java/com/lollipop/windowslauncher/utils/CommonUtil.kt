@@ -10,10 +10,7 @@ import android.os.Looper
 import android.text.TextUtils
 import android.util.Log
 import android.util.TypedValue
-import android.view.InflateException
-import android.view.KeyEvent
-import android.view.LayoutInflater
-import android.view.View
+import android.view.*
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
@@ -481,7 +478,7 @@ fun Context.versionCode(): Long {
  * 创建一个时间性能工具
  * 用于检测某些代码的运行时间
  */
-inline fun <reified T: Any> T.timeProfiler(): TimeProfiler {
+inline fun <reified T : Any> T.timeProfiler(): TimeProfiler {
     val profiler = TimeProfiler(this.javaClass.simpleName)
     profiler.punch()
     return profiler
@@ -522,25 +519,25 @@ fun String.writeTo(file: File) {
     }
 }
 
-inline fun <reified T: ViewBinding> Activity.lazyBind(): Lazy<T> = lazy { bind() }
+inline fun <reified T : ViewBinding> Activity.lazyBind(): Lazy<T> = lazy { bind() }
 
-inline fun <reified T: ViewBinding> Fragment.lazyBind(): Lazy<T> = lazy { bind() }
+inline fun <reified T : ViewBinding> Fragment.lazyBind(): Lazy<T> = lazy { bind() }
 
-inline fun <reified T: ViewBinding> View.lazyBind(): Lazy<T> = lazy { bind() }
+inline fun <reified T : ViewBinding> View.lazyBind(): Lazy<T> = lazy { bind() }
 
-inline fun <reified T: ViewBinding> Activity.bind(): T {
+inline fun <reified T : ViewBinding> Activity.bind(): T {
     return bind(this.layoutInflater)
 }
 
-inline fun <reified T: ViewBinding> Fragment.bind(): T {
+inline fun <reified T : ViewBinding> Fragment.bind(): T {
     return bind(this.layoutInflater)
 }
 
-inline fun <reified T: ViewBinding> View.bind(): T {
+inline fun <reified T : ViewBinding> View.bind(): T {
     return bind(LayoutInflater.from(this.context))
 }
 
-inline fun <reified T: ViewBinding> bind(layoutInflater: LayoutInflater): T {
+inline fun <reified T : ViewBinding> bind(layoutInflater: LayoutInflater): T {
     val bindingClass = T::class.java
     val inflateMethod = bindingClass.getMethod("inflate", LayoutInflater::class.java)
     val invokeObj = inflateMethod.invoke(null, layoutInflater)
@@ -550,17 +547,34 @@ inline fun <reified T: ViewBinding> bind(layoutInflater: LayoutInflater): T {
     throw InflateException("Cant inflate ViewBinding ${bindingClass.name}")
 }
 
-inline fun <reified T: ViewBinding> View.withThis(): Lazy<T> = lazy {
+inline fun <reified T : ViewBinding> View.withThis(layoutId: Int = 0): Lazy<T> = lazy {
     val bindingClass = T::class.java
-    val bindMethod = bindingClass.getMethod("bind", View::class.java)
-    val bindObj = bindMethod.invoke(null, this)
-    if (bindObj is T) {
-        return@lazy bindObj
+    val view: View = this
+    if (view is ViewGroup && layoutId != 0) {
+        val bindMethod = bindingClass.getMethod(
+            "inflate",
+            LayoutInflater::class.java,
+            ViewGroup::class.java,
+            Boolean::class.javaPrimitiveType
+        )
+        val bindObj = bindMethod.invoke(null, LayoutInflater.from(context), view, true)
+        if (bindObj is T) {
+            return@lazy bindObj
+        }
+    } else {
+        val bindMethod = bindingClass.getMethod(
+            "bind",
+            View::class.java
+        )
+        val bindObj = bindMethod.invoke(null, view)
+        if (bindObj is T) {
+            return@lazy bindObj
+        }
     }
     throw InflateException("Cant inflate ViewBinding ${bindingClass.name}")
 }
 
-inline fun <reified T: Any> Fragment.identityCheck(ctx: Context? = null, run: (T) -> Unit) {
+inline fun <reified T : Any> Fragment.identityCheck(ctx: Context? = null, run: (T) -> Unit) {
     // 父碎片第一优先
     if (check(parentFragment, run)) {
         return
@@ -575,7 +589,7 @@ inline fun <reified T: Any> Fragment.identityCheck(ctx: Context? = null, run: (T
     }
 }
 
-inline fun <reified T: Any> check(ctx: Any? = null, run: (T) -> Unit): Boolean {
+inline fun <reified T : Any> check(ctx: Any? = null, run: (T) -> Unit): Boolean {
     if (ctx is T) {
         run(ctx)
         return true
@@ -583,14 +597,14 @@ inline fun <reified T: Any> check(ctx: Any? = null, run: (T) -> Unit): Boolean {
     return false
 }
 
-inline fun <T: View> T.visibleOrGone(boolean: Boolean, onVisible: (T.() -> Unit) = {}) {
+inline fun <T : View> T.visibleOrGone(boolean: Boolean, onVisible: (T.() -> Unit) = {}) {
     visibility = if (boolean) { View.VISIBLE } else { View.GONE }
     if (boolean) {
         onVisible.invoke(this)
     }
 }
 
-inline fun <T: View> T.visibleOrInvisible(boolean: Boolean, onVisible: (T.() -> Unit) = {}) {
+inline fun <T : View> T.visibleOrInvisible(boolean: Boolean, onVisible: (T.() -> Unit) = {}) {
     visibility = if (boolean) { View.VISIBLE } else { View.INVISIBLE }
     if (boolean) {
         onVisible.invoke(this)

@@ -1,12 +1,9 @@
 package com.lollipop.windowslauncher.tile.view
 
 import android.content.Context
-import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.viewbinding.ViewBinding
 import com.lollipop.windowslauncher.theme.LColor
 import com.lollipop.windowslauncher.tile.Tile
-import com.lollipop.windowslauncher.utils.withThis
 
 /**
  * @author lollipop
@@ -16,26 +13,13 @@ import com.lollipop.windowslauncher.utils.withThis
 abstract class TileView<T : Tile>(context: Context) : ViewGroup(context) {
 
     /**
-     * 磁块布局的id
-     */
-    abstract val tileLayoutId: Int
-
-    /**
      * 磁块的View辅助工具
      */
     private val tileViewHelper by lazy {
         TileViewHelper(this)
     }
 
-    init {
-        initTileShell()
-    }
-
-    private fun initTileShell() {
-        if (tileLayoutId != 0) {
-            LayoutInflater.from(context).inflate(tileLayoutId, this)
-        }
-    }
+    private var pendingBind = false
 
     /**
      * 磁块的View可能包含动画
@@ -65,7 +49,11 @@ abstract class TileView<T : Tile>(context: Context) : ViewGroup(context) {
     @Suppress("UNCHECKED_CAST")
     private fun bindTileInfo(tile: Tile?) {
         try {
-            if (tile != null && isAttachedToWindow) {
+            if (tile != null) {
+                if (!isAttachedToWindow) {
+                    pendingBind = true
+                    return
+                }
                 onBind(tile as T)
             }
         } catch (e: Throwable) {
@@ -88,7 +76,10 @@ abstract class TileView<T : Tile>(context: Context) : ViewGroup(context) {
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         tileViewHelper.onAttached()
-        notifyTileChange()
+        if (pendingBind) {
+            pendingBind = false
+            notifyTileChange()
+        }
     }
 
     override fun onDetachedFromWindow() {
@@ -121,9 +112,7 @@ abstract class TileView<T : Tile>(context: Context) : ViewGroup(context) {
         val w = width
         val h = height
         for (i in 0 until childCount) {
-            getChildAt(i)?.let {
-                it.layout(0, 0, w, h)
-            }
+            getChildAt(i)?.layout(0, 0, w, h)
         }
     }
 }

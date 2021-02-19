@@ -123,10 +123,7 @@ class TileLayout(
         val view = getTileView(tile)?:return
         tileList.add(tile)
         addView(view)
-        if (view is TileView<*>) {
-            view.bind(tile)
-            checkViewStatus(view)
-        }
+        checkViewStatus(view)
     }
 
     /**
@@ -172,12 +169,14 @@ class TileLayout(
         }
     }
 
-    private fun getTileView(tile: Tile): View? {
-        return tileCreator?.createTile(tile, context)
+    private fun getTileView(tile: Tile): TileView<*>? {
+        return tileCreator?.createTile(tile, context)?.apply {
+            bind(tile)
+        }
     }
 
     fun interface TileCreator {
-        fun createTile(tile: Tile, context: Context): View
+        fun createTile(tile: Tile, context: Context): TileView<*>
     }
 
 }
