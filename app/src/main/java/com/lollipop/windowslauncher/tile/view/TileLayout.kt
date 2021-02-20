@@ -2,6 +2,7 @@ package com.lollipop.windowslauncher.tile.view
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import com.lollipop.windowslauncher.tile.Tile
@@ -95,6 +96,27 @@ class TileLayout(
                 )
             }
         }
+    }
+
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        when (event?.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+
+            }
+            MotionEvent.ACTION_MOVE -> {
+
+            }
+            MotionEvent.ACTION_UP -> {
+
+            }
+            MotionEvent.ACTION_CANCEL -> {
+
+            }
+            MotionEvent.ACTION_POINTER_UP -> {
+
+            }
+        }
+        return super.onTouchEvent(event)
     }
 
     fun removeTileAt(index: Int) {
