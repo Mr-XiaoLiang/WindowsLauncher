@@ -27,6 +27,8 @@ object LSettings {
 
     const val TILE_COL_MIN = 6
 
+    const val DEF_PRIMARY_COLOR = 0xFF888888.toInt()
+
     fun setHorizontalToVertical(context: Context, value: Boolean) {
         context[KEY_HORIZONTAL_TO_VERTICAL] = value
     }
@@ -66,7 +68,7 @@ object LSettings {
     }
 
     fun getPrimaryColor(context: Context): Int {
-        return context[KEY_PRIMARY_COLOR, Color.BLUE]
+        return context[KEY_PRIMARY_COLOR, DEF_PRIMARY_COLOR]
     }
 
     fun getNightMode(context: Context): Int {

@@ -3,6 +3,7 @@ package com.lollipop.windowslauncher.theme
 import android.graphics.Color
 import android.os.Handler
 import android.os.Looper
+import com.lollipop.windowslauncher.utils.LSettings
 import java.lang.ref.WeakReference
 
 /**
@@ -31,7 +32,7 @@ object LColor {
             return style.fore
         }
 
-    var primary: Int = Color.BLUE
+    var primary: Int = LSettings.DEF_PRIMARY_COLOR
         private set
 
     var tileTransparent = false
