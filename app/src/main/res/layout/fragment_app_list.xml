@@ -12,6 +12,12 @@
 
     <include
         android:id="@+id/floatingKey"
-        layout="@layout/item_app_list_key"/>
+        layout="@layout/item_app_list"/>
+
+    <ImageView
+        android:id="@+id/searchBtn"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_margin="7dp"/>
 
 </FrameLayout>

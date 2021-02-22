@@ -14,6 +14,7 @@ import com.lollipop.windowslauncher.databinding.ItemAppListBinding
 import com.lollipop.windowslauncher.databinding.ItemAppListKeyBinding
 import com.lollipop.windowslauncher.theme.LColor
 import com.lollipop.windowslauncher.utils.*
+import com.lollipop.windowslauncher.views.KeyNumberDrawable
 
 /**
  * @author lollipop
@@ -55,17 +56,17 @@ class AppListFragment : BaseFragment() {
         viewBinding.appListView.apply {
             layoutManager = LinearLayoutManager(view.context)
             adapter = appInfoAdapter
-            addOnScrollListener(FloatingKeyHelper(viewBinding.floatingKey) { context, position ->
-                appHelper.getAppInfo(position).getLabelKey(context)
-            })
+//            addOnScrollListener(FloatingKeyHelper(viewBinding.floatingKey) { context, position ->
+//                appHelper.getAppInfo(position).getLabelKey(context)
+//            })
         }
     }
 
     override fun onColorChanged() {
         super.onColorChanged()
         viewBinding.floatingKey.apply {
-            floatingKeyView.setBackgroundColor(LColor.background)
-            floatingKeyValueView.setTextColor(LColor.foreground)
+//            floatingKeyView.setBackgroundColor(LColor.background)
+//            floatingKeyValueView.setTextColor(LColor.foreground)
         }
     }
 
@@ -166,8 +167,8 @@ class AppListFragment : BaseFragment() {
         }
 
         override fun onBindViewHolder(holder: AppInfoHolder, position: Int) {
-            holder.bind(appHelper.getAppInfo(position),
-                isShowKey(holder.itemView.context, position))
+//            holder.bind(appHelper.getAppInfo(position),
+//                isShowKey(holder.itemView.context, position))
         }
 
         override fun getItemCount(): Int {
@@ -196,6 +197,12 @@ class AppListFragment : BaseFragment() {
         }
 
     }
+
+    private data class AppListInfo(
+        val key: String,
+        val app: IconHelper.AppInfo,
+        val isAppInfo: Boolean
+    )
 
     private class AppInfoHolder private constructor(
         private val viewBinding: ItemAppListBinding,
@@ -229,22 +236,57 @@ class AppListFragment : BaseFragment() {
             }
         }
 
-        fun bind(appInfo: IconHelper.AppInfo, showKey: Boolean) {
+        fun bind(appInfo: AppListInfo) {
             val context = viewBinding.root.context
-            val label = appInfo.getLabel(context)
-            viewBinding.floatingKey.let {
-                if (showKey) {
-                    it.floatingKeyView.visibility = View.VISIBLE
-                    it.floatingKeyValueView.text = label
-                    it.floatingKeyValueView.setTextColor(LColor.foreground)
-                } else {
-                    it.floatingKeyView.visibility = View.INVISIBLE
+            appInfo.app.loadLabel(context) {
+                viewBinding.nameView.text = it
+            }
+            viewBinding.nameView.setTextColor(LColor.foreground)
+            viewBinding.iconView.load(appInfo.app)
+            viewBinding.iconView.updateBackground()
+        }
+
+    }
+
+    private class AppKeyHolder(
+        private val viewBinding: ItemAppListBinding,
+        private val onClick: (AppKeyHolder) -> Unit
+    ): RecyclerView.ViewHolder(viewBinding.root) {
+        companion object {
+            fun create(
+                parent: ViewGroup,
+                onClick: (AppKeyHolder) -> Unit,
+            ): AppKeyHolder {
+                return AppKeyHolder(parent.bind(), onClick)
+            }
+        }
+
+        private val keyNumberDrawable = KeyNumberDrawable().apply {
+            style = KeyNumberDrawable.Style.Stroke
+            setPadding(5)
+            setStrokeWidth(2)
+            setTextSize(20)
+        }
+
+        init {
+            viewBinding.root.apply {
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+                setOnClickListener {
+                    onClick(this@AppKeyHolder)
                 }
             }
-            viewBinding.nameView.text = label
-            viewBinding.nameView.setTextColor(LColor.foreground)
-            viewBinding.iconView.load(appInfo)
-            viewBinding.iconView.updateBackground()
+            viewBinding.iconView.setImageDrawable(keyNumberDrawable)
+        }
+
+        fun bind(appInfo: AppListInfo) {
+            keyNumberDrawable.backgroundColor = LColor.tileBackground
+            keyNumberDrawable.foregroundColor = LColor.tileBackground
+            keyNumberDrawable.text = appInfo.key
+            keyNumberDrawable.invalidateSelf()
+            viewBinding.nameView.text = ""
         }
 
     }

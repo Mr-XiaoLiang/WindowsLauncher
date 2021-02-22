@@ -6,6 +6,7 @@ import com.lollipop.windowslauncher.tile.TileSize
 import com.lollipop.windowslauncher.tile.TileType
 import com.lollipop.windowslauncher.utils.IconHelper
 import com.lollipop.windowslauncher.utils.doAsync
+import com.lollipop.windowslauncher.utils.loadLabel
 import com.lollipop.windowslauncher.utils.onUI
 
 /**
@@ -20,17 +21,7 @@ class AppTile(var appInfo: IconHelper.AppInfo): Tile {
     override val tileType = TileType.App
 
     fun loadLabel(context: Context, run: (value: CharSequence) -> Unit) {
-        val label = appInfo.optLabel()
-        if (label != null) {
-            run(label)
-            return
-        }
-        doAsync {
-            val newLabel = appInfo.getLabel(context)
-            onUI {
-                run(newLabel)
-            }
-        }
+        appInfo.loadLabel(context, run)
     }
 
 }
