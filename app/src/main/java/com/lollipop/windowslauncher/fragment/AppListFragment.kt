@@ -27,12 +27,21 @@ class AppListFragment : BaseFragment() {
 
     private val viewBinding: FragmentAppListBinding by lazyBind()
 
+    private val appList = ArrayList<AppListInfo>()
+
     private val appListInsetsHelper: WindowInsetsHelper by lazy {
         WindowInsetsHelper(viewBinding.root)
     }
 
     private val appInfoAdapter: AppInfoAdapter by lazy {
-        AppInfoAdapter(appHelper, ::onItemClick, ::onItemLongClick)
+        AppInfoAdapter(appList, ::onItemClick, ::onItemLongClick)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        appHelper.onAppListChange {
+            updateAppList()
+        }
     }
 
     override fun onAttach(context: Context) {
@@ -73,6 +82,11 @@ class AppListFragment : BaseFragment() {
     override fun onInsetsChange(root: View, left: Int, top: Int, right: Int, bottom: Int) {
         super.onInsetsChange(root, left, top, right, bottom)
         appListInsetsHelper.setInsetsByPadding(left, top, right, bottom)
+    }
+
+    private fun updateAppList() {
+        // TODO
+        appInfoAdapter.notifyDataSetChanged()
     }
 
     private fun onItemClick(position: Int) {
@@ -151,15 +165,14 @@ class AppListFragment : BaseFragment() {
     }
 
     private class AppInfoAdapter(
-        private val appHelper: IconHelper,
+        private val appList: ArrayList<AppListInfo>,
         private val onClick: (Int) -> Unit,
         private val onLongClick: (Int) -> Unit,
     ): RecyclerView.Adapter<AppInfoHolder>() {
 
-        init {
-            appHelper.onAppListChange {
-                notifyDataSetChanged()
-            }
+        companion object {
+            private const val VIEW_TYPE_APP = 0
+            private const val VIEW_TYPE_KEY = 1
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppInfoHolder {
@@ -172,7 +185,7 @@ class AppListFragment : BaseFragment() {
         }
 
         override fun getItemCount(): Int {
-            return appHelper.appCount
+            return appList.size
         }
 
         private fun onHolderClick(holder: AppInfoHolder) {
@@ -183,19 +196,9 @@ class AppListFragment : BaseFragment() {
             onLongClick(holder.adapterPosition)
         }
 
-        fun isShowKey(context: Context, position: Int): Boolean {
-            if (position == 0) {
-                return true
-            }
-            val lastAppInfo = appHelper.getAppInfo(position - 1)
-            val lastKey = lastAppInfo.getLabelKey(context)
-            val thisKey = appHelper.getAppInfo(position).getLabelKey(context)
-            if (thisKey == lastKey) {
-                return false
-            }
-            return true
+        override fun getItemViewType(position: Int): Int {
+            return if (appList[position].isAppInfo) { VIEW_TYPE_APP } else { VIEW_TYPE_KEY }
         }
-
     }
 
     private data class AppListInfo(
