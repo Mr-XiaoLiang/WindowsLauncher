@@ -11,9 +11,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintDimensionRatio="1:1"
         android:src="@mipmap/ic_launcher"
-        app:layout_constraintHeight_percent="0.5"
         android:id="@+id/appIcon"
         android:scaleType="fitCenter"/>
 

@@ -16,6 +16,7 @@ import com.lollipop.windowslauncher.databinding.ItemAppListBinding
 import com.lollipop.windowslauncher.databinding.ItemAppListKeyBinding
 import com.lollipop.windowslauncher.theme.LColor
 import com.lollipop.windowslauncher.utils.*
+import com.lollipop.windowslauncher.views.IconImageView
 import com.lollipop.windowslauncher.views.KeyNumberDrawable
 import net.sourceforge.pinyin4j.PinyinHelper
 import java.util.*
@@ -29,6 +30,15 @@ import kotlin.math.max
  * 应用列表的碎片
  */
 class AppListFragment : BaseFragment() {
+
+    companion object {
+        private val keyIconStyle: KeyNumberDrawable.() -> Unit = {
+            style = KeyNumberDrawable.Style.Stroke
+            setPadding(3)
+            setStrokeWidth(3)
+            setTextSize(24)
+        }
+    }
 
     private val appHelper = IconHelper.newHelper { null }
 
@@ -71,12 +81,18 @@ class AppListFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        viewBinding.floatingKey.apply {
+            nameView.visibleOrGone(false)
+            iconView.setImageDrawable(KeyNumberDrawable().apply(keyIconStyle))
+            iconView.setBackgroundColor(Color.TRANSPARENT)
+            iconView.setIconWeight(0.8F, 1F)
+        }
         viewBinding.appListView.apply {
             layoutManager = LinearLayoutManager(view.context)
             adapter = appInfoAdapter
-//            addOnScrollListener(FloatingKeyHelper(viewBinding.floatingKey) { context, position ->
-//                appHelper.getAppInfo(position).getLabelKey(context)
-//            })
+            addOnScrollListener(FloatingKeyHelper(viewBinding.floatingKey) { position ->
+                appList[position].key
+            })
         }
         updateAppList()
     }
@@ -84,8 +100,14 @@ class AppListFragment : BaseFragment() {
     override fun onColorChanged() {
         super.onColorChanged()
         viewBinding.floatingKey.apply {
-//            floatingKeyView.setBackgroundColor(LColor.background)
-//            floatingKeyValueView.setTextColor(LColor.foreground)
+            root.setBackgroundColor(LColor.background)
+            iconView.drawable?.let {
+                if (it is KeyNumberDrawable) {
+                    it.backgroundColor = LColor.tileBackground
+                    it.foregroundColor = LColor.tileBackground
+                    it.invalidateSelf()
+                }
+            }
         }
     }
 
@@ -130,8 +152,8 @@ class AppListFragment : BaseFragment() {
      * 比较char的顺序
      */
     private fun appInfoCompare(o1: AppListInfo, o2: AppListInfo): Int {
-        val key1 = o1.app.optLabel()?:o1.key
-        val key2 = o2.app.optLabel()?:o2.key
+        val key1 = o1.key
+        val key2 = o2.key
         for (i in 0 until max(key1.length, key2.length)) {
             if (key1.length <= i) {
                 return -1
@@ -191,8 +213,8 @@ class AppListFragment : BaseFragment() {
     }
 
     private class FloatingKeyHelper(
-        private val viewBinding: ItemAppListKeyBinding,
-        private val getLabelKey: (Context, Int) -> CharSequence,
+        private val viewBinding: ItemAppListBinding,
+        private val getLabelKey: (Int) -> String,
     ): RecyclerView.OnScrollListener() {
 
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -222,9 +244,8 @@ class AppListFragment : BaseFragment() {
             val firstVisible = layoutManager.findFirstVisibleItemPosition()
 
             setKey(firstVisible)
-            val firstKey = getLabelKey(recyclerView.context, firstVisible)
-            val secondKey = getLabelKey(recyclerView.context, firstCompletely)
-
+            val firstKey = getLabelKey(firstVisible)
+            val secondKey = getLabelKey(firstCompletely)
             if (firstKey == secondKey) {
                 topTo()
                 return
@@ -235,8 +256,11 @@ class AppListFragment : BaseFragment() {
         }
 
         private fun setKey(position: Int) {
-            viewBinding.floatingKeyValueView.apply {
-                text = getLabelKey(context, position)
+            viewBinding.iconView.drawable?.let { icon ->
+                if (icon is KeyNumberDrawable) {
+                    icon.text = getLabelKey(position)
+                    icon.invalidateSelf()
+                }
             }
         }
 
@@ -339,6 +363,8 @@ class AppListFragment : BaseFragment() {
                     true
                 }
             }
+            viewBinding.iconView.setOutline(IconImageView.Outline.Oval)
+            viewBinding.iconView.setIconWeight(0.8F, 0.5F)
         }
 
         fun bind(appInfo: AppListInfo) {
@@ -366,12 +392,7 @@ class AppListFragment : BaseFragment() {
             }
         }
 
-        private val keyNumberDrawable = KeyNumberDrawable().apply {
-            style = KeyNumberDrawable.Style.Stroke
-            setPadding(5)
-            setStrokeWidth(3)
-            setTextSize(22)
-        }
+        private val keyNumberDrawable = KeyNumberDrawable().apply(keyIconStyle)
 
         init {
             viewBinding.root.apply {
@@ -385,6 +406,8 @@ class AppListFragment : BaseFragment() {
             }
             viewBinding.iconView.setImageDrawable(keyNumberDrawable)
             viewBinding.iconView.setBackgroundColor(Color.TRANSPARENT)
+            viewBinding.nameView.visibleOrGone(false)
+            viewBinding.iconView.setIconWeight(0.8F, 1F)
         }
 
         fun bind(appInfo: AppListInfo) {
@@ -392,9 +415,7 @@ class AppListFragment : BaseFragment() {
             keyNumberDrawable.foregroundColor = LColor.tileBackground
             keyNumberDrawable.text = appInfo.key
             keyNumberDrawable.invalidateSelf()
-            viewBinding.nameView.text = ""
         }
 
     }
-
 }

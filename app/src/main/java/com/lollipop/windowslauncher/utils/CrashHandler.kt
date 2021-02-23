@@ -114,7 +114,7 @@ object CrashHandler {
                 packageName, PackageManager.GET_ACTIVITIES
             )
             if (pi != null) {
-                val code = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                val code = if (versionThen(Build.VERSION_CODES.P)) {
                     pi.longVersionCode
                 } else {
                     pi.versionCode

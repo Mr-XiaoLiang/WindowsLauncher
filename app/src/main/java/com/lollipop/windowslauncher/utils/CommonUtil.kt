@@ -468,7 +468,7 @@ fun Context.versionName(): String {
  */
 fun Context.versionCode(): Long {
     val packageInfo = packageManager.getPackageInfo(packageName, 0)
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+    if (versionThen(Build.VERSION_CODES.P)) {
         return packageInfo.longVersionCode
     }
     return packageInfo.versionCode.toLong()
@@ -624,4 +624,8 @@ fun Int.biggerThen(o: Int): Int {
         return o
     }
     return this
+}
+
+fun versionThen(target: Int): Boolean {
+    return Build.VERSION.SDK_INT >= target
 }

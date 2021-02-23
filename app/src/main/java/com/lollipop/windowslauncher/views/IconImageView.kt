@@ -1,25 +1,28 @@
 package com.lollipop.windowslauncher.views
 
 import android.content.Context
+import android.graphics.Path
+import android.graphics.Rect
+import android.graphics.drawable.AdaptiveIconDrawable
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.util.AttributeSet
+import android.util.FloatProperty
+import android.view.View
 import androidx.appcompat.widget.AppCompatImageView
 import com.lollipop.windowslauncher.theme.LColor
-import com.lollipop.windowslauncher.utils.IconHelper
-import com.lollipop.windowslauncher.utils.doAsync
-import com.lollipop.windowslauncher.utils.findDrawableId
-import com.lollipop.windowslauncher.utils.onUI
+import com.lollipop.windowslauncher.utils.*
 
 /**
  * @author lollipop
  * @date 10/24/20 20:47
  * Icon的ImageView
  */
-class IconImageView(context: Context, attr: AttributeSet?, defStyle: Int):
-        AppCompatImageView(context, attr, defStyle), IconView {
+class IconImageView(context: Context, attr: AttributeSet?, defStyle: Int) :
+    AdaptiveIconView(context, attr, defStyle), IconView {
 
-    constructor(context: Context, attr: AttributeSet?): this(context, attr, 0)
-    constructor(context: Context): this(context, null)
+    constructor(context: Context, attr: AttributeSet?) : this(context, attr, 0)
+    constructor(context: Context) : this(context, null)
 
     /**
      * 使用id加载一个图标
@@ -90,11 +93,34 @@ class IconImageView(context: Context, attr: AttributeSet?, defStyle: Int):
         setBackgroundColor(color)
     }
 
+    fun setOutline(outline: Outline) {
+        iconOutlineProvider = when (outline) {
+            Outline.Oval -> OvalIconOutline()
+        }
+    }
+
     private fun setIconDrawable(loadIcon: Drawable) {
         if (this.drawable != loadIcon) {
             setImageDrawable(loadIcon)
-        } else  if (this.width > 0 && this.height > 0) {
+        } else if (this.width > 0 && this.height > 0) {
             requestLayout()
+        }
+    }
+
+    enum class Outline {
+        Oval
+    }
+
+    private class OvalIconOutline : IconOutlineProvider {
+        override fun getIconOutline(path: Path, left: Int, top: Int, iconWidth: Int) {
+            path.reset()
+            path.addOval(
+                left.toFloat(),
+                top.toFloat(),
+                (left + iconWidth).toFloat(),
+                (top + iconWidth).toFloat(),
+                Path.Direction.CW
+            )
         }
     }
 

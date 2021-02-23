@@ -8,6 +8,7 @@ import com.lollipop.windowslauncher.tile.impl.AppTile
 import com.lollipop.windowslauncher.tile.view.TileView
 import com.lollipop.windowslauncher.utils.visibleOrGone
 import com.lollipop.windowslauncher.utils.withThis
+import com.lollipop.windowslauncher.views.IconImageView
 
 /**
  * @author lollipop
@@ -17,6 +18,11 @@ import com.lollipop.windowslauncher.utils.withThis
 class AppTileView(context: Context) : TileView<AppTile>(context) {
 
     private val viewBinding: ItemTileAppBinding by withThis(true)
+
+    init {
+        viewBinding.appIcon.setIconWeight(0.8F, 0.5F)
+        viewBinding.appIcon.setOutline(IconImageView.Outline.Oval)
+    }
 
     override fun onBind(tile: AppTile) {
         viewBinding.appIcon.load(tile.appInfo)

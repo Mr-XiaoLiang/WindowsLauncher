@@ -96,7 +96,7 @@ object AppInfoCore: BroadcastReceiver() {
         val pm = context.packageManager
         val mainIntent = Intent(Intent.ACTION_MAIN)
         mainIntent.addCategory(Intent.CATEGORY_LAUNCHER)
-        val flag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        val flag = if (versionThen(Build.VERSION_CODES.M)) {
             MATCH_ALL
         } else {
             0

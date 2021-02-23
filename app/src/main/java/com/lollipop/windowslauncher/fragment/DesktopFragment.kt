@@ -38,7 +38,7 @@ class DesktopFragment : BaseFragment() {
         super.onAttach(context)
         appHelper.loadAppInfo(context)
         val tileSizeValues = TileSize.values()
-        val appCount = appHelper.appCount.range(0, 30)
+        val appCount = appHelper.appCount//.range(0, 30)
         log("appCount = $appCount")
         for (i in 0 until appCount) {
             val appInfo = appHelper.getAppInfo(i)

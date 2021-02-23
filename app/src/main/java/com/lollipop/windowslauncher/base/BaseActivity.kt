@@ -8,6 +8,7 @@ import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import com.lollipop.windowslauncher.listener.*
 import com.lollipop.windowslauncher.theme.LColor
+import com.lollipop.windowslauncher.utils.versionThen
 
 /**
  * @author lollipop
@@ -48,7 +49,7 @@ open class BaseActivity: AppCompatActivity(),
     fun initRootGroup(group: View) {
         group.fitsSystemWindows = true
         group.setOnApplyWindowInsetsListener { _, insets ->
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (versionThen(Build.VERSION_CODES.R)) {
                 val systemInsets = insets.getInsets(WindowInsets.Type.systemBars())
                 onWindowInsetsChange(
                     group,
