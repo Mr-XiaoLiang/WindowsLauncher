@@ -168,31 +168,40 @@ class AppListFragment : BaseFragment() {
         private val appList: ArrayList<AppListInfo>,
         private val onClick: (Int) -> Unit,
         private val onLongClick: (Int) -> Unit,
-    ): RecyclerView.Adapter<AppInfoHolder>() {
+    ): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
         companion object {
             private const val VIEW_TYPE_APP = 0
             private const val VIEW_TYPE_KEY = 1
         }
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppInfoHolder {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+            if (viewType == VIEW_TYPE_KEY) {
+                return AppKeyHolder.create(parent, ::onHolderClick)
+            }
             return AppInfoHolder.create(parent, ::onHolderClick, ::onHolderLongClick)
         }
 
-        override fun onBindViewHolder(holder: AppInfoHolder, position: Int) {
-//            holder.bind(appHelper.getAppInfo(position),
-//                isShowKey(holder.itemView.context, position))
+        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+            when (holder) {
+                is AppInfoHolder -> {
+                    holder.bind(appList[position])
+                }
+                is AppKeyHolder -> {
+                    holder.bind(appList[position])
+                }
+            }
         }
 
         override fun getItemCount(): Int {
             return appList.size
         }
 
-        private fun onHolderClick(holder: AppInfoHolder) {
+        private fun onHolderClick(holder: RecyclerView.ViewHolder) {
             onClick(holder.adapterPosition)
         }
 
-        private fun onHolderLongClick(holder: AppInfoHolder) {
+        private fun onHolderLongClick(holder: RecyclerView.ViewHolder) {
             onLongClick(holder.adapterPosition)
         }
 
