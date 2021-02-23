@@ -411,8 +411,6 @@ class IconHelper private constructor(
 
         private var myIcon: Drawable? = null
 
-        private var myLabelKey: CharSequence? = null
-
         /**
          * 图标是否已经被加载过了
          */
@@ -448,13 +446,6 @@ class IconHelper private constructor(
         }
 
         /**
-         * 返回label的首字母
-         */
-        fun optLabelKey(): CharSequence? {
-            return myLabelKey
-        }
-
-        /**
          * 加载应用名称
          */
         fun getLabel(context: Context): CharSequence {
@@ -465,24 +456,6 @@ class IconHelper private constructor(
             val l = getLabel(context, pkg)
             myLabel = l
             return l
-        }
-
-        /**
-         * 加载应用名称
-         */
-        fun getLabelKey(context: Context): CharSequence {
-            val label = myLabelKey
-            if (label != null) {
-                return label
-            }
-            val l = getLabel(context)
-            if (l.isEmpty()) {
-                myLabelKey = l
-                return l
-            }
-            val key = l.subSequence(0, 1)
-            myLabelKey = key
-            return key
         }
 
         /**

@@ -25,7 +25,6 @@ class KeyNumberDrawable: Drawable() {
     private val paint = Paint().apply {
         isAntiAlias = true
         textAlign = Paint.Align.CENTER
-        isFakeBoldText
     }
 
     fun setTextSize(valueSp: Int) {
@@ -49,6 +48,7 @@ class KeyNumberDrawable: Drawable() {
         paint.color = backgroundColor
         canvas.drawRect(bounds, paint)
         if (text.isNotEmpty()) {
+            paint.style = Paint.Style.FILL
             paint.color = foregroundColor
             val width = paint.measureText(text)
             val textSize = paint.textSize
