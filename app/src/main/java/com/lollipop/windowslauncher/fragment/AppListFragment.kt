@@ -2,6 +2,7 @@ package com.lollipop.windowslauncher.fragment
 
 import android.content.ComponentName
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -13,7 +14,6 @@ import com.lollipop.windowslauncher.listener.WindowInsetsHelper
 import com.lollipop.windowslauncher.base.BaseFragment
 import com.lollipop.windowslauncher.databinding.FragmentAppListBinding
 import com.lollipop.windowslauncher.databinding.ItemAppListBinding
-import com.lollipop.windowslauncher.databinding.ItemAppListKeyBinding
 import com.lollipop.windowslauncher.theme.LColor
 import com.lollipop.windowslauncher.utils.*
 import com.lollipop.windowslauncher.views.IconImageView
@@ -109,6 +109,10 @@ class AppListFragment : BaseFragment() {
                 }
             }
         }
+        viewBinding.searchBtn.apply {
+            setBackgroundColor(LColor.background)
+            imageTintList = ColorStateList.valueOf(LColor.foreground)
+        }
     }
 
     override fun onInsetsChange(root: View, left: Int, top: Int, right: Int, bottom: Int) {
@@ -169,6 +173,10 @@ class AppListFragment : BaseFragment() {
         return 0
     }
 
+    /**
+     * 获取应用名称中的第一个字母，
+     * 期间涉及汉字转拼音的过程
+     */
     private fun getFistKey(label: CharSequence): String {
         val labelString = label.toString()
         // 空标题，默认放到不可解析的分组
@@ -191,6 +199,12 @@ class AppListFragment : BaseFragment() {
         return checkKeyChar(key)
     }
 
+    /**
+     * 检查Key的值
+     * 确保在A～Z之间
+     * 对于小写字母，将转换为大写
+     * 其他非法字符转换为#
+     */
     private fun checkKeyChar(char: Char): String {
         // 如果是大写字母，那么直接使用
         if (char in 'A'..'Z') {

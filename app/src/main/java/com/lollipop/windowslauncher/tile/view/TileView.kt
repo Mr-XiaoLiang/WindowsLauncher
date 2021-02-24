@@ -2,6 +2,7 @@ package com.lollipop.windowslauncher.tile.view
 
 import android.content.Context
 import android.view.ViewGroup
+import android.widget.TextView
 import com.lollipop.windowslauncher.theme.LColor
 import com.lollipop.windowslauncher.tile.Tile
 
@@ -115,4 +116,9 @@ abstract class TileView<T : Tile>(context: Context) : ViewGroup(context) {
             getChildAt(i)?.layout(0, 0, w, h)
         }
     }
+
+    protected fun TextView.setShadow(color: Int) {
+        setShadowLayer(2F, 1F, 1F, color)
+    }
+
 }

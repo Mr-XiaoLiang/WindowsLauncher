@@ -16,13 +16,21 @@
         android:scaleType="fitCenter"/>
 
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="0px"
         android:layout_height="wrap_content"
         android:id="@+id/tileName"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:gravity="start|bottom"
+        android:maxLines="2"
+        android:ellipsize="end"
+        android:lines="2"
         android:layout_margin="10dp"
         android:textSize="12sp"
+        android:shadowDx="1"
+        android:shadowDy="1"
+        android:shadowRadius="2"
         android:text="@string/app_name"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

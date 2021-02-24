@@ -31,6 +31,7 @@ class AppTileView(context: Context) : TileView<AppTile>(context) {
                 text = it
             }
             setTextColor(LColor.foreground)
+            setShadow(LColor.background)
         }
     }
 }

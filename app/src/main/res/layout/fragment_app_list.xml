@@ -14,10 +14,11 @@
         android:id="@+id/floatingKey"
         layout="@layout/item_app_list"/>
 
-    <ImageView
+    <com.lollipop.windowslauncher.views.OvalIconButton
         android:id="@+id/searchBtn"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:layout_margin="7dp"/>
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginLeft="18dp"
+        android:src="@drawable/ic_wp_search"/>
 
 </FrameLayout>
