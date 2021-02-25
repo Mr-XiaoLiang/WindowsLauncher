@@ -2,12 +2,14 @@ package com.lollipop.windowslauncher.fragment
 
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.lollipop.windowslauncher.listener.WindowInsetsHelper
@@ -218,7 +220,18 @@ class AppListFragment : BaseFragment() {
         return "#"
     }
 
+    /**
+     * Item点击事件
+     */
     private fun onItemClick(position: Int) {
+        val info = appList[position]
+        if (info.isAppInfo) {
+            startActivity(Intent().apply {
+                component = info.app.pkg
+            })
+        } else {
+            Toast.makeText(context, "${info.key}", Toast.LENGTH_SHORT).show()
+        }
         // TODO
     }
 
