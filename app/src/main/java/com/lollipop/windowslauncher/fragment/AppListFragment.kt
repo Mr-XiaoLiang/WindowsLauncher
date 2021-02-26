@@ -228,6 +228,7 @@ class AppListFragment : BaseFragment() {
         if (info.isAppInfo) {
             startActivity(Intent().apply {
                 component = info.app.pkg
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             })
         } else {
             Toast.makeText(context, "${info.key}", Toast.LENGTH_SHORT).show()
