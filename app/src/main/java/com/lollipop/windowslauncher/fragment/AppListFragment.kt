@@ -50,12 +50,16 @@ class AppListFragment : BaseFragment() {
 
     private val keyPositionMap = HashMap<String, Int>()
 
-    private val appListInsetsHelper: WindowInsetsHelper by lazy {
+    private val appListInsetsHelper by lazy {
         WindowInsetsHelper(viewBinding.root)
     }
 
-    private val appInfoAdapter: AppInfoAdapter by lazy {
+    private val appInfoAdapter by lazy {
         AppInfoAdapter(appList, ::onItemClick, ::onItemLongClick)
+    }
+
+    private val recyclerViewScrollHelper by lazy {
+        RecyclerViewScrollHelper(viewBinding.appListView)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -110,7 +114,7 @@ class AppListFragment : BaseFragment() {
     private fun onAlphabetKeyClick(key: String, index: Int) {
         val position = keyPositionMap[key]?:-1
         if (position >= 0) {
-            viewBinding.appListView.smoothScrollToPosition(position)
+            recyclerViewScrollHelper.scrollTo(position)
         }
         viewBinding.alphabetView.close()
     }
