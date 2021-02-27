@@ -53,15 +53,17 @@ class TileLayout(
 //        ViewConfiguration.getLongPressTimeout()
 //    }
 
+    private val contentHeight: Int
+        get() {
+            val tileWidth = TileLayoutHelper.tileWidth(width, spanCount, space)
+            val content = tileLayoutHelper.maxLine * (tileWidth + space) + space
+            return content + viewInsets.bottom
+        }
+
     private val scrollHelper = ScrollHelper(
         this,
         {
-            val tileWidth = TileLayoutHelper.tileWidth(width, spanCount, space)
-            val content = tileLayoutHelper.maxLine * (tileWidth + space) + space
-            content + viewInsets.bottom
-        },
-        {
-            it - height
+            contentHeight - height
         },
         {
             viewInsets.top * -1

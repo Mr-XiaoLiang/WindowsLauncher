@@ -98,19 +98,26 @@ class AppListFragment : BaseFragment() {
         }
         viewBinding.alphabetView.apply {
             space = 10.dp2px().toInt()
-            bindKeyStatusProvider { key, _ ->
-                val position = keyPositionMap[key]?:-1
-                position >= 0
-            }
-            bindKeyClickListener { key, index ->
-                Toast.makeText(context, key, Toast.LENGTH_SHORT).show()
-                close()
-            }
+            bindKeyStatusProvider(::isAlphabetKeyEnable)
+            bindKeyClickListener(::onAlphabetKeyClick)
         }
         viewBinding.searchBtn.setOnClickListener {
             viewBinding.alphabetView.open()
         }
         updateAppList()
+    }
+
+    private fun onAlphabetKeyClick(key: String, index: Int) {
+        val position = keyPositionMap[key]?:-1
+        if (position >= 0) {
+            viewBinding.appListView.smoothScrollToPosition(position)
+        }
+        viewBinding.alphabetView.close()
+    }
+
+    private fun isAlphabetKeyEnable(key: String, index: Int): Boolean {
+        val position = keyPositionMap[key]?:-1
+        return position >= 0
     }
 
     override fun onColorChanged() {
@@ -245,7 +252,7 @@ class AppListFragment : BaseFragment() {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             })
         } else {
-            Toast.makeText(context, "${info.key}", Toast.LENGTH_SHORT).show()
+            viewBinding.searchBtn.callOnClick()
         }
     }
 

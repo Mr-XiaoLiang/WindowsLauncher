@@ -2,6 +2,7 @@ package com.lollipop.windowslauncher.views
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import com.lollipop.windowslauncher.theme.LColor
@@ -62,13 +63,25 @@ class AlphabetView(
 
     private var keyClickListener: ((key: String, index: Int) -> Unit)? = null
 
+    private val scrollHelper = ScrollHelper(
+        this,
+        {
+            contentHeight - height
+        },
+        {
+            paddingTop
+        }
+    )
+
     init {
         while (childCount < keyArray.size) {
             addView(LetterView(context).apply {
                 setOnClickListener(this@AlphabetView)
             })
         }
-        setOnClickListener {  }
+        setOnClickListener {
+            close()
+        }
     }
 
     /**
@@ -142,14 +155,35 @@ class AlphabetView(
         }
     }
 
-    /**
-     * 负数表示检查向上滚动，正数表示检查向下滚动。
-     */
-    override fun canScrollVertically(direction: Int): Boolean {
-        if (contentHeight <= height) {
-            return false
-        }
-        return super.canScrollVertically(direction)
+    override fun setPadding(left: Int, top: Int, right: Int, bottom: Int) {
+        super.setPadding(left, top, right, bottom)
+        scrollHelper.resetScrollOffset(false)
+        requestLayout()
+    }
+
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        val superEvent = super.onTouchEvent(event)
+        return scrollHelper.onTouchEvent(event) || superEvent
+    }
+
+    override fun onOverScrolled(scrollX: Int, scrollY: Int, clampedX: Boolean, clampedY: Boolean) {
+        scrollHelper.onOverScrolled(scrollX, scrollY, clampedX, clampedY)
+    }
+
+    override fun scrollTo(x: Int, y: Int) {
+        scrollHelper.scrollTo(x, y)
+    }
+
+    override fun scrollBy(x: Int, y: Int) {
+        scrollHelper.scrollTo(x, y)
+    }
+
+    override fun computeScroll() {
+        scrollHelper.computeScroll()
+    }
+
+    override fun onScrollChanged(l: Int, t: Int, oldl: Int, oldt: Int) {
+        scrollHelper.onScrollChanged(l, t, oldl, oldt)
     }
 
     fun open() {
