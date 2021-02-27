@@ -31,6 +31,9 @@ class RecyclerViewScrollHelper(
             recyclerView.smoothScrollToPosition(position)
         } else {
             recyclerView.scrollToPosition(position)
+            delay(10) {
+                moveItemToTop()
+            }
         }
     }
 

@@ -5,17 +5,18 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.PointF
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
-import com.lollipop.windowslauncher.listener.WindowInsetsHelper
 import com.lollipop.windowslauncher.base.BaseFragment
 import com.lollipop.windowslauncher.databinding.FragmentAppListBinding
 import com.lollipop.windowslauncher.databinding.ItemAppListBinding
+import com.lollipop.windowslauncher.listener.WindowInsetsHelper
 import com.lollipop.windowslauncher.theme.LColor
 import com.lollipop.windowslauncher.utils.*
 import com.lollipop.windowslauncher.views.IconImageView
@@ -25,6 +26,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.math.max
+
 
 /**
  * @author lollipop
@@ -56,10 +58,6 @@ class AppListFragment : BaseFragment() {
 
     private val appInfoAdapter by lazy {
         AppInfoAdapter(appList, ::onItemClick, ::onItemLongClick)
-    }
-
-    private val recyclerViewScrollHelper by lazy {
-        RecyclerViewScrollHelper(viewBinding.appListView)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -94,7 +92,7 @@ class AppListFragment : BaseFragment() {
             iconView.setIconWeight(0.8F, 1F)
         }
         viewBinding.appListView.apply {
-            layoutManager = LinearLayoutManager(view.context)
+            layoutManager = AppLayoutManager(view.context)
             adapter = appInfoAdapter
             addOnScrollListener(FloatingKeyHelper(viewBinding.floatingKey) { position ->
                 appList[position].key
@@ -115,7 +113,7 @@ class AppListFragment : BaseFragment() {
     private fun onAlphabetKeyClick(key: String, index: Int) {
         val position = keyPositionMap[key] ?: -1
         if (position >= 0) {
-            recyclerViewScrollHelper.scrollTo(position)
+            viewBinding.appListView.smoothScrollToPosition(position)
         }
         viewBinding.alphabetView.close()
     }
@@ -477,5 +475,39 @@ class AppListFragment : BaseFragment() {
             keyNumberDrawable.invalidateSelf()
         }
 
+    }
+
+    private class AppLayoutManager(
+        context: Context, orientation: Int, reverseLayout: Boolean
+    ) : LinearLayoutManager(context, orientation, reverseLayout) {
+
+        constructor(context: Context) : this(context, RecyclerView.VERTICAL, false)
+
+        val topSnappedSmoothScroller by lazy {
+            TopSnappedSmoothScroller(context, ::computeScrollVectorForPosition)
+        }
+
+        override fun smoothScrollToPosition(
+            recyclerView: RecyclerView,
+            state: RecyclerView.State?,
+            position: Int
+        ) {
+            topSnappedSmoothScroller.targetPosition = position
+            startSmoothScroll(topSnappedSmoothScroller)
+        }
+
+        class TopSnappedSmoothScroller(
+            context: Context,
+            private val computeScrollVectorForPositionCallback: (Int) -> PointF?
+        ) : LinearSmoothScroller(context) {
+
+            override fun computeScrollVectorForPosition(targetPosition: Int): PointF? {
+                return computeScrollVectorForPositionCallback(targetPosition)
+            }
+
+            override fun getVerticalSnapPreference(): Int {
+                return SNAP_TO_START //设置滚动位置
+            }
+        }
     }
 }
