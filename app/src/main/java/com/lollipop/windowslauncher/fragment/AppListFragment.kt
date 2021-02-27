@@ -96,6 +96,20 @@ class AppListFragment : BaseFragment() {
                 appList[position].key
             })
         }
+        viewBinding.alphabetView.apply {
+            space = 10.dp2px().toInt()
+            bindKeyStatusProvider { key, _ ->
+                val position = keyPositionMap[key]?:-1
+                position >= 0
+            }
+            bindKeyClickListener { key, index ->
+                Toast.makeText(context, key, Toast.LENGTH_SHORT).show()
+                close()
+            }
+        }
+        viewBinding.searchBtn.setOnClickListener {
+            viewBinding.alphabetView.open()
+        }
         updateAppList()
     }
 
@@ -146,9 +160,9 @@ class AppListFragment : BaseFragment() {
                 // 把应用信息放进去
                 appList.add(info)
             }
-            log("appList.size = ${appList.size}")
             onUI {
                 appInfoAdapter.notifyDataSetChanged()
+                viewBinding.alphabetView.updateKeyStatus()
             }
         }
     }
@@ -233,7 +247,6 @@ class AppListFragment : BaseFragment() {
         } else {
             Toast.makeText(context, "${info.key}", Toast.LENGTH_SHORT).show()
         }
-        // TODO
     }
 
     private fun onItemLongClick(position: Int) {

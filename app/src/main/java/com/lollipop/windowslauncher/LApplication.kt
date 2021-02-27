@@ -23,9 +23,7 @@ class LApplication: Application(), Application.ActivityLifecycleCallbacks {
     override fun onCreate() {
         super.onCreate()
         lastNightMode = LSettings.getNightMode(this)
-        LColor.update(
-            LSettings.getStyleByMode(this),
-            LSettings.getPrimaryColor(this))
+        LSettings.notifyColorInfo(this)
         registerActivityLifecycleCallbacks(this)
     }
 
@@ -33,9 +31,7 @@ class LApplication: Application(), Application.ActivityLifecycleCallbacks {
         val nightMode = LSettings.getNightMode(this)
         if (lastNightMode != nightMode) {
             lastNightMode = nightMode
-            LColor.update(
-                LSettings.getStyleByMode(this),
-                LSettings.getPrimaryColor(this))
+            LSettings.notifyColorInfo(this)
         }
     }
 

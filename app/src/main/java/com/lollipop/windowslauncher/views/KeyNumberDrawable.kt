@@ -20,7 +20,23 @@ class KeyNumberDrawable: Drawable() {
 
     var text: String = ""
 
-    private var padding = 0F
+    var strokeWidth: Float
+        get() {
+            return paint.strokeWidth
+        }
+        set(value) {
+            paint.strokeWidth = value
+        }
+
+    var padding = 0F
+
+    var textSize: Float
+        get() {
+            return paint.textSize
+        }
+        set(value) {
+            paint.textSize = value
+        }
 
     private val paint = Paint().apply {
         isAntiAlias = true
@@ -28,11 +44,11 @@ class KeyNumberDrawable: Drawable() {
     }
 
     fun setTextSize(valueSp: Int) {
-        paint.textSize = valueSp.sp2px()
+        textSize = valueSp.sp2px()
     }
 
     fun setStrokeWidth(valueDp: Int) {
-        paint.strokeWidth = valueDp.dp2px()
+        strokeWidth = valueDp.dp2px()
     }
 
     fun setPadding(valueDp: Int) {

@@ -7,14 +7,11 @@ import android.view.View
 import android.view.ViewGroup
 import com.lollipop.windowslauncher.base.BaseFragment
 import com.lollipop.windowslauncher.databinding.FragmentDesktopBinding
-import com.lollipop.windowslauncher.databinding.ItemTileAppBinding
 import com.lollipop.windowslauncher.tile.Tile
 import com.lollipop.windowslauncher.tile.TileSize
 import com.lollipop.windowslauncher.tile.TileViewCreator
 import com.lollipop.windowslauncher.tile.impl.AppTile
-import com.lollipop.windowslauncher.tile.tileView.AppTileView
 import com.lollipop.windowslauncher.utils.*
-import kotlin.collections.ArrayList
 
 /**
  * @author lollipop
@@ -73,6 +70,9 @@ class DesktopFragment : BaseFragment() {
 
     override fun onInsetsChange(root: View, left: Int, top: Int, right: Int, bottom: Int) {
         super.onInsetsChange(root, left, top, right, bottom)
+        viewBinding.tileGroup.apply {
+            setViewInsets(left, top, right, bottom)
+        }
     }
 
     override fun onResume() {

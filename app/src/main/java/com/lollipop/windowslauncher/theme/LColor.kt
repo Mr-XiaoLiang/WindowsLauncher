@@ -35,6 +35,9 @@ object LColor {
     var primary: Int = LSettings.DEF_PRIMARY_COLOR
         private set
 
+    var primaryReversal: Int = LSettings.DEF_PRIMARY_COLOR_REVERSAL
+        private set
+
     var tileTransparent = false
         private set
 
@@ -47,13 +50,13 @@ object LColor {
             }
         }
 
-
     /**
      * 更新全局的主题色
      */
-    fun update(style: Style, primary: Int) {
+    fun update(style: Style, primary: Int, primaryReversal: Int) {
         this.style = style
         this.primary = primary
+        this.primaryReversal = primaryReversal
         notifyColorChange()
     }
 

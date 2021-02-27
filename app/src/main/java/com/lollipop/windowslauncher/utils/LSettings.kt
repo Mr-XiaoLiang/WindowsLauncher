@@ -17,6 +17,8 @@ object LSettings {
 
     private const val KEY_PRIMARY_COLOR = "KEY_PRIMARY_COLOR"
 
+    private const val KEY_PRIMARY_COLOR_REVERSAL = "KEY_PRIMARY_COLOR_REVERSAL"
+
     private const val KEY_TILE_COL = "KEY_TILE_COL"
 
     private const val KEY_CREVICE_MODE = "KEY_CREVICE_MODE"
@@ -27,7 +29,9 @@ object LSettings {
 
     const val TILE_COL_MIN = 6
 
-    const val DEF_PRIMARY_COLOR = 0xFF888888.toInt()
+    const val DEF_PRIMARY_COLOR = 0xFF018786.toInt()
+
+    const val DEF_PRIMARY_COLOR_REVERSAL = 0xFF888888.toInt()
 
     fun setHorizontalToVertical(context: Context, value: Boolean) {
         context[KEY_HORIZONTAL_TO_VERTICAL] = value
@@ -63,6 +67,14 @@ object LSettings {
         return ThemeMode.valueOf(name)
     }
 
+    fun setPrimaryColorReversal(context: Context, color: Int) {
+        context[KEY_PRIMARY_COLOR_REVERSAL] = color
+    }
+
+    fun getPrimaryColorReversal(context: Context): Int {
+        return context[KEY_PRIMARY_COLOR_REVERSAL, DEF_PRIMARY_COLOR_REVERSAL]
+    }
+
     fun setPrimaryColor(context: Context, color: Int) {
         context[KEY_PRIMARY_COLOR] = color
     }
@@ -92,6 +104,14 @@ object LSettings {
                 return LColor.Style.BLACK
             }
         }
+    }
+
+    fun notifyColorInfo(context: Context) {
+        LColor.update(
+            getStyleByMode(context),
+            getPrimaryColor(context),
+            getPrimaryColorReversal(context)
+        )
     }
 
     enum class ThemeMode {
