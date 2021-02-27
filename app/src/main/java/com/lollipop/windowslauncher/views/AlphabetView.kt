@@ -6,7 +6,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import com.lollipop.windowslauncher.theme.LColor
-import com.lollipop.windowslauncher.utils.visibleOrGone
+import com.lollipop.windowslauncher.utils.AnimationHelper
 
 /**
  * @author lollipop
@@ -15,11 +15,10 @@ import com.lollipop.windowslauncher.utils.visibleOrGone
  */
 class AlphabetView(
     context: Context, attributeSet: AttributeSet?, style: Int
-) : ViewGroup(context, attributeSet, style), View.OnClickListener {
+) : ViewGroup(context, attributeSet, style) {
 
     constructor(context: Context, attr: AttributeSet?) : this(context, attr, 0)
     constructor(context: Context) : this(context, null)
-
 
     /**
      * 关键字的Array
@@ -49,7 +48,7 @@ class AlphabetView(
     var spanCount: Int = 4
         set(value) {
             field = value
-            requestLayout()
+            checkLayout()
         }
 
     /**
@@ -65,23 +64,87 @@ class AlphabetView(
 
     private val scrollHelper = ScrollHelper(
         this,
-        {
-            contentHeight - height
-        },
-        {
-            paddingTop
-        }
+        { contentHeight - height },
+        { paddingTop }
     )
 
-    init {
-        while (childCount < keyArray.size) {
-            addView(LetterView(context).apply {
-                setOnClickListener(this@AlphabetView)
-            })
+    private val animationHelper by lazy {
+        AnimationHelper(
+            onUpdate = ::onAnimationUpdate,
+        ).apply {
+            bind(this@AlphabetView)
+            onStart { view, _ ->
+                if (view.visibility != View.VISIBLE) {
+                    view.visibility = View.VISIBLE
+                }
+            }
+            onEnd { view, _ ->
+                if (progressIs(AnimationHelper.PROGRESS_MIN)) {
+                    view.visibility = View.INVISIBLE
+                }
+            }
         }
+    }
+
+    init {
+        checkLayout()
         setOnClickListener {
             close()
         }
+    }
+
+    /**
+     * 为了动画考虑，增加行管理器
+     * 因为有了行概念，因此需要管理行及列
+     */
+    private fun checkLayout() {
+        val span = spanCount
+        val keySize = keyArray.size
+        val lineCount = (keySize / span).let {
+            if (it * span < keySize) {
+                it + 1
+            } else {
+                it
+            }
+        }
+        while (childCount < lineCount) {
+            addView(LineGroup(context, ::getKey, ::onKeyClick))
+        }
+        while (childCount > lineCount) {
+            removeViewAt(0)
+        }
+        var keyViewCount = 0
+        for (i in 0 until childCount) {
+            getChildAt(i)?.let { lineGroup ->
+                lineGroup as LineGroup
+                lineGroup.spanCount = span
+                lineGroup.itemSpace = space
+                lineGroup.line = i
+                keyViewCount += lineGroup.childCount
+                while (lineGroup.childCount < span && keyViewCount < keySize) {
+                    lineGroup.addView(LetterView(context))
+                    keyViewCount++
+                }
+            }
+        }
+        if (keyViewCount > keySize) {
+            for (i in (childCount - 1) downTo 0) {
+                getChildAt(i)?.let { lineGroup ->
+                    lineGroup as LineGroup
+                    while (lineGroup.childCount > 0 && keyViewCount > keySize) {
+                        lineGroup.removeViewAt(0)
+                        keyViewCount--
+                    }
+                }
+            }
+        }
+    }
+
+    private fun getKey(index: Int): String {
+        if (index < 0 || index >= keyArray.size) {
+            return ""
+        }
+        return keyArray[index]
     }
 
     /**
@@ -97,9 +160,16 @@ class AlphabetView(
         val heightSize = MeasureSpec.getSize(heightMeasureSpec)
         val itemWidth = getItemWidth(widthSize)
 
-        val childMeasureSpec = MeasureSpec.makeMeasureSpec(itemWidth, MeasureSpec.EXACTLY)
+        val childWidthMeasureSpec = MeasureSpec.makeMeasureSpec(widthSize, MeasureSpec.EXACTLY)
+        val childHeightMeasureSpec = MeasureSpec.makeMeasureSpec(itemWidth, MeasureSpec.EXACTLY)
         for (index in 0 until childCount) {
-            getChildAt(index)?.measure(childMeasureSpec, childMeasureSpec)
+            getChildAt(index)?.let {
+                if (it is LineGroup) {
+                    it.itemWidth = itemWidth
+                    it.itemSpace = space
+                }
+                it.measure(childWidthMeasureSpec, childHeightMeasureSpec)
+            }
         }
         setMeasuredDimension(widthSize, heightSize)
     }
@@ -107,22 +177,17 @@ class AlphabetView(
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         val itemSpace = space
         val top = paddingTop + itemSpace
-        val left = paddingLeft + itemSpace
+        val left = paddingLeft
+        val right = width - paddingRight
         val itemWidth = getItemWidth(width)
         val scroll = scrollOffset * -1
         for (index in 0 until childCount) {
             getChildAt(index)?.let { child ->
-                val x = index % spanCount
-                val y = index / spanCount
-                val childLeft = x * (itemSpace + itemWidth) + left
-                val childTop = y * (itemSpace + itemWidth) + top + scroll
-                child.layout(childLeft, childTop, childLeft + itemWidth, childTop + itemWidth)
+                val childTop = index * (itemSpace + itemWidth) + top + scroll
+                child.layout(left, childTop, right, childTop + itemWidth)
                 val childBottom = childTop + itemWidth + itemSpace - scroll
                 if (childBottom > contentHeight) {
                     contentHeight = childBottom
-                }
-                if (child is LetterView) {
-                    child.bindText(keyArray[index % keyArray.size])
                 }
             }
         }
@@ -130,7 +195,7 @@ class AlphabetView(
     }
 
     private fun onKeyClick(index: Int) {
-        if (index >= keyArray.size) {
+        if (index < 0 || index >= keyArray.size) {
             return
         }
         keyClickListener?.invoke(keyArray[index], index)
@@ -145,11 +210,21 @@ class AlphabetView(
     }
 
     fun updateKeyStatus() {
-        val provider = keyStatusProvider?:return
+        val provider = keyStatusProvider ?: return
         for (index in 0 until childCount) {
             getChildAt(index)?.let { child ->
-                if (child is LetterView) {
-                    child.enable = provider(keyArray[index % keyArray.size], index)
+                if (child is LineGroup) {
+                    child.updateKeyStatus(provider)
+                }
+            }
+        }
+    }
+
+    fun onColorChanged(enableBg: Int, disableBg: Int, textColor: Int) {
+        for (index in 0 until childCount) {
+            getChildAt(index)?.let { child ->
+                if (child is LineGroup) {
+                    child.onColorChanged(enableBg, disableBg, textColor)
                 }
             }
         }
@@ -187,20 +262,153 @@ class AlphabetView(
     }
 
     fun open() {
-        visibleOrGone(true)
+        val lineCount = childCount
+        val lineDelay = LineGroup.DURATION / (lineCount)
+        for (i in 0 until childCount) {
+            getChildAt(i)?.let { child ->
+                if (child is LineGroup) {
+                    child.doInAnimation(i * lineDelay)
+                }
+            }
+        }
+        animationHelper.duration = lineCount * lineDelay + LineGroup.DURATION
+        animationHelper.open()
     }
 
     fun close() {
-        visibleOrGone(false)
+        val lineCount = childCount
+        val lineDelay = LineGroup.DURATION / (lineCount)
+        for (i in 0 until childCount) {
+            getChildAt(i)?.let { child ->
+                if (child is LineGroup) {
+                    child.doOutAnimation(i * lineDelay)
+                }
+            }
+        }
+        animationHelper.duration = lineCount * lineDelay + LineGroup.DURATION
+        animationHelper.close()
     }
 
-    override fun onClick(v: View?) {
-        v?:return
-        val index = indexOfChild(v)
-        if (index < 0) {
-            return
+    private fun onAnimationUpdate(target: View, progress: Float) {
+        target.background?.apply {
+            alpha = (progress * 255).toInt()
+            invalidateSelf()
         }
-        onKeyClick(index)
+    }
+
+    /**
+     * 为了更接近WindowsPhone中的展开动画
+     * 需要将Grid的布局改成Line的布局，以此来做翻转动画
+     * 才能在保持列间距的同时，整体翻转
+     */
+    private class LineGroup(
+        context: Context,
+        private val keyProvider: (Int) -> String,
+        private val onKeyClick: (Int) -> Unit
+    ) : ViewGroup(context), OnClickListener {
+
+        companion object {
+            private const val START_IN = 1F
+            private const val END_IN = 0F
+            private const val START_OUT = 0F
+            private const val END_OUT = -1F
+            const val DURATION = 200L
+        }
+
+        var itemSpace = 0
+
+        var spanCount = 0
+
+        var itemWidth = 0
+
+        var line = 0
+
+        private val animationHelper by lazy {
+            AnimationHelper(
+                duration = DURATION,
+                onUpdate = ::onAnimationUpdate,
+            ).apply {
+                bind(this@LineGroup)
+            }
+        }
+
+        private fun onAnimationUpdate(target: View, progress: Float) {
+            target.rotationX = progress * 90
+        }
+
+        fun doInAnimation(delay: Long) {
+            animationHelper.reset(START_IN)
+            onAnimationUpdate(this, START_IN)
+            animationHelper.run(
+                startProgress = START_IN,
+                endProgress = END_IN,
+                delay = delay
+            )
+        }
+
+        fun doOutAnimation(delay: Long) {
+            animationHelper.run(
+                startProgress = START_OUT,
+                endProgress = END_OUT,
+                delay = delay
+            )
+        }
+
+        fun updateKeyStatus(provider: (String, Int) -> Boolean) {
+            for (index in 0 until childCount) {
+                getChildAt(index)?.let { child ->
+                    if (child is LetterView) {
+                        val position = line * spanCount + index
+                        child.enable = provider(keyProvider(position), position)
+                    }
+                }
+            }
+        }
+
+        fun onColorChanged(enableBg: Int, disableBg: Int, textColor: Int) {
+            for (index in 0 until childCount) {
+                getChildAt(index)?.let { child ->
+                    if (child is LetterView) {
+                        child.onColorChanged(enableBg, disableBg, textColor)
+                    }
+                }
+            }
+        }
+
+        override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+            val widthSize = MeasureSpec.getSize(widthMeasureSpec)
+            val heightSize = MeasureSpec.getSize(heightMeasureSpec)
+
+            val childMeasureSpec = MeasureSpec.makeMeasureSpec(itemWidth, MeasureSpec.EXACTLY)
+            for (index in 0 until childCount) {
+                getChildAt(index)?.measure(childMeasureSpec, childMeasureSpec)
+            }
+            setMeasuredDimension(widthSize, heightSize)
+        }
+
+        override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+            for (index in 0 until childCount) {
+                getChildAt(index)?.let { child ->
+                    val childLeft = index * (itemSpace + itemWidth) + itemSpace
+                    val childTop = 0
+                    child.layout(childLeft, childTop, childLeft + itemWidth, childTop + itemWidth)
+                    if (child is LetterView) {
+                        child.bindText(keyProvider(line * spanCount + index))
+                        child.setOnClickListener(this)
+                    }
+                }
+            }
+        }
+
+        override fun onClick(v: View?) {
+            v ?: return
+            val index = indexOfChild(v)
+            if (index < 0) {
+                return
+            }
+            onKeyClick(line * spanCount + index)
+        }
+
     }
 
     private class LetterView(context: Context) : View(context) {

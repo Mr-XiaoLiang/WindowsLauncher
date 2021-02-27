@@ -101,6 +101,7 @@ class AppListFragment : BaseFragment() {
             })
         }
         viewBinding.alphabetView.apply {
+            setBackgroundColor(0xA0000000.toInt())
             space = 10.dp2px().toInt()
             bindKeyStatusProvider(::isAlphabetKeyEnable)
             bindKeyClickListener(::onAlphabetKeyClick)
@@ -112,7 +113,7 @@ class AppListFragment : BaseFragment() {
     }
 
     private fun onAlphabetKeyClick(key: String, index: Int) {
-        val position = keyPositionMap[key]?:-1
+        val position = keyPositionMap[key] ?: -1
         if (position >= 0) {
             recyclerViewScrollHelper.scrollTo(position)
         }
@@ -120,7 +121,7 @@ class AppListFragment : BaseFragment() {
     }
 
     private fun isAlphabetKeyEnable(key: String, index: Int): Boolean {
-        val position = keyPositionMap[key]?:-1
+        val position = keyPositionMap[key] ?: -1
         return position >= 0
     }
 
@@ -140,6 +141,9 @@ class AppListFragment : BaseFragment() {
             setBackgroundColor(LColor.background)
             imageTintList = ColorStateList.valueOf(LColor.foreground)
         }
+        viewBinding.alphabetView.onColorChanged(
+            LColor.primary, LColor.primaryReversal, LColor.foreground
+        )
     }
 
     override fun onInsetsChange(root: View, left: Int, top: Int, right: Int, bottom: Int) {
@@ -148,7 +152,7 @@ class AppListFragment : BaseFragment() {
     }
 
     private fun updateAppList() {
-        val c = context?:return
+        val c = context ?: return
         doAsync {
             val list = ArrayList<AppListInfo>()
             for (i in 0 until appHelper.appCount) {
@@ -267,7 +271,7 @@ class AppListFragment : BaseFragment() {
     private class FloatingKeyHelper(
         private val viewBinding: ItemAppListBinding,
         private val getLabelKey: (Int) -> String,
-    ): RecyclerView.OnScrollListener() {
+    ) : RecyclerView.OnScrollListener() {
 
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
             super.onScrolled(recyclerView, dx, dy)
@@ -337,7 +341,7 @@ class AppListFragment : BaseFragment() {
         private val appList: ArrayList<AppListInfo>,
         private val onClick: (Int) -> Unit,
         private val onLongClick: (Int) -> Unit,
-    ): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
         companion object {
             private const val VIEW_TYPE_APP = 0
@@ -375,7 +379,11 @@ class AppListFragment : BaseFragment() {
         }
 
         override fun getItemViewType(position: Int): Int {
-            return if (appList[position].isAppInfo) { VIEW_TYPE_APP } else { VIEW_TYPE_KEY }
+            return if (appList[position].isAppInfo) {
+                VIEW_TYPE_APP
+            } else {
+                VIEW_TYPE_KEY
+            }
         }
     }
 
@@ -434,7 +442,7 @@ class AppListFragment : BaseFragment() {
     private class AppKeyHolder(
         private val viewBinding: ItemAppListBinding,
         private val onClick: (AppKeyHolder) -> Unit
-    ): RecyclerView.ViewHolder(viewBinding.root) {
+    ) : RecyclerView.ViewHolder(viewBinding.root) {
         companion object {
             fun create(
                 parent: ViewGroup,

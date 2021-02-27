@@ -51,7 +51,8 @@ class HomeIndicatorView(context: Context, attributeSet: AttributeSet?, style: In
             }
         }
         animationHelper.onEnd { view, _ ->
-            if (animationHelper.isClose && view.visibility != INVISIBLE) {
+            if (animationHelper.progressIs(AnimationHelper.PROGRESS_MIN)
+                && view.visibility != INVISIBLE) {
                 view.visibility = INVISIBLE
             }
         }

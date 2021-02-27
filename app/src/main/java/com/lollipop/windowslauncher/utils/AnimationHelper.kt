@@ -11,8 +11,9 @@ import kotlin.math.abs
  * 动画辅助类
  */
 class AnimationHelper(
-    private val duration: Long = 300L,
-    private val onUpdate: (View, Float) -> Unit):
+    var duration: Long = 300L,
+    private val onUpdate: (View, Float) -> Unit
+) :
     ValueAnimator.AnimatorUpdateListener,
     Animator.AnimatorListener {
 
@@ -20,8 +21,7 @@ class AnimationHelper(
         const val PROGRESS_MAX = 1F
         const val PROGRESS_MIN = 0F
 
-        const val OPEN_THRESHOLD = 0.999F
-        const val CLOSE_THRESHOLD = 0.001F
+        const val THRESHOLD = 0.001F
     }
 
     private val animator: ValueAnimator by lazy {
@@ -38,34 +38,42 @@ class AnimationHelper(
 
     private var onEndCallback: ((View, Float) -> Unit)? = null
 
-    val isOpen: Boolean
-        get() {
-            return progress >= OPEN_THRESHOLD
-        }
+    private var startProgress = PROGRESS_MIN
 
-    val isClose: Boolean
-        get() {
-            return progress <= CLOSE_THRESHOLD
-        }
+    private var endProgress = PROGRESS_MAX
+
+    fun reset(progress: Float) {
+        this.progress = progress
+    }
+
+    fun progressIs(float: Float): Boolean {
+        return abs(float - progress) <= THRESHOLD
+    }
 
     fun bind(view: View?) {
         this.target = view
     }
 
     fun open(isAnimation: Boolean = true) {
-        if (isAnimation) {
-            doAnimation(true)
-        } else {
-            onProgressChange(PROGRESS_MAX)
-            onAnimationEnd(animator)
-        }
+        run(isAnimation, PROGRESS_MIN, PROGRESS_MAX)
     }
 
     fun close(isAnimation: Boolean = true) {
+        run(isAnimation, PROGRESS_MAX, PROGRESS_MIN)
+    }
+
+    fun run(
+        isAnimation: Boolean = true,
+        startProgress: Float = PROGRESS_MAX,
+        endProgress: Float = PROGRESS_MIN,
+        delay: Long = 0
+    ) {
+        this.startProgress = startProgress
+        this.endProgress = endProgress
         if (isAnimation) {
-            doAnimation(false)
+            doAnimation(delay)
         } else {
-            onProgressChange(PROGRESS_MIN)
+            onProgressChange(endProgress)
             onAnimationEnd(animator)
         }
     }
@@ -83,14 +91,12 @@ class AnimationHelper(
         animator.cancel()
     }
 
-    private fun doAnimation(isOpen: Boolean) {
+    private fun doAnimation(delay: Long) {
         animator.cancel()
-        val end = if (isOpen) {
-            PROGRESS_MAX
-        } else {
-            PROGRESS_MIN
-        }
-        val d = (abs(progress - end) * duration).toLong()
+        animator.startDelay = delay
+        val start = startProgress
+        val end = endProgress
+        val d = (abs(progress - end) / abs(start - end) * duration).toLong()
         animator.setFloatValues(progress, end)
         animator.duration = d
         animator.start()
@@ -111,7 +117,7 @@ class AnimationHelper(
 
     override fun onAnimationStart(animation: Animator?) {
         if (animation == animator) {
-            val callback = onStartCallback?:return
+            val callback = onStartCallback ?: return
             target?.let {
                 callback.invoke(it, progress)
             }
@@ -120,7 +126,7 @@ class AnimationHelper(
 
     override fun onAnimationEnd(animation: Animator?) {
         if (animation == animator) {
-            val callback = onEndCallback?:return
+            val callback = onEndCallback ?: return
             target?.let {
                 callback.invoke(it, progress)
             }
