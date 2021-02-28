@@ -1,6 +1,7 @@
 package com.lollipop.windowslauncher.views
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Canvas
 import android.graphics.Path
 import android.graphics.Rect
@@ -8,6 +9,7 @@ import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatImageView
+import com.lollipop.windowslauncher.theme.LColor
 
 /**
  * @author lollipop
@@ -39,6 +41,11 @@ class OvalIconButton(
             return
         }
         super.setBackground(background)
+    }
+
+    fun updateColor() {
+        setBackgroundColor(LColor.background)
+        imageTintList = ColorStateList.valueOf(LColor.foreground)
     }
 
     private class OvalBackground(color: Int): ColorDrawable(color) {

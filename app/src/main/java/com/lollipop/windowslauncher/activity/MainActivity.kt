@@ -12,7 +12,7 @@ import com.lollipop.windowslauncher.fragment.DesktopFragment
 import com.lollipop.windowslauncher.theme.LColor
 import com.lollipop.windowslauncher.utils.lazyBind
 
-class MainActivity : BaseActivity() {
+class MainActivity : BaseActivity(), DesktopFragment.OpenAppListCallback {
 
     private val viewBinding: ActivityMainBinding by lazyBind()
 
@@ -45,6 +45,11 @@ class MainActivity : BaseActivity() {
             return false
         }
         return super.canBack()
+    }
+
+
+    override fun openAppList() {
+        viewBinding.pageGroup.currentItem = 1
     }
 
     private class PageAdapter(

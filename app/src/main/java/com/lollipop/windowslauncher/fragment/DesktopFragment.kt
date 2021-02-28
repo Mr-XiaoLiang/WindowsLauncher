@@ -27,8 +27,15 @@ class DesktopFragment : BaseFragment() {
 
     private val appHelper = IconHelper.newHelper()
 
+    private var openAppListCallback: OpenAppListCallback? = null
+
     override fun onAttach(context: Context) {
         super.onAttach(context)
+
+        identityCheck<OpenAppListCallback> {
+            openAppListCallback = it
+        }
+
         appHelper.loadAppInfo(context)
         val tileSizeValues = TileSize.values()
         val appCount = appHelper.appCount//.range(0, 30)
@@ -40,6 +47,11 @@ class DesktopFragment : BaseFragment() {
         }
     }
 
+    override fun onDetach() {
+        super.onDetach()
+        openAppListCallback = null
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
@@ -48,6 +60,11 @@ class DesktopFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        viewBinding.appListBtn.setOnClickListener {
+            openAppListCallback?.openAppList()
+        }
+
         viewBinding.loadingView.apply {
             defLineStyle()
             post {
@@ -84,6 +101,7 @@ class DesktopFragment : BaseFragment() {
         super.onColorChanged()
         viewBinding.tileGroup.notifyTileChanged()
         viewBinding.loadingView.pointColor = LColor.primary
+        viewBinding.appListBtn.updateColor()
     }
 
     override fun onInsetsChange(root: View, left: Int, top: Int, right: Int, bottom: Int) {
@@ -101,6 +119,10 @@ class DesktopFragment : BaseFragment() {
     override fun onPause() {
         super.onPause()
         viewBinding.tileGroup.onPause()
+    }
+
+    interface OpenAppListCallback {
+        fun openAppList()
     }
 
 }

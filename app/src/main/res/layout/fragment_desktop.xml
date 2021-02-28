@@ -10,6 +10,14 @@
         android:layout_height="match_parent"
         android:overScrollMode="never"/>
 
+    <com.lollipop.windowslauncher.views.OvalIconButton
+        style="@style/defOvalIconBtn"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="20dp"
+        android:src="@drawable/ic_wp_arrow"
+        android:rotation="135"
+        android:id="@+id/appListBtn"/>
+
     <com.lollipop.windowslauncher.views.LoadingView
         android:layout_width="match_parent"
         android:layout_height="10dp"

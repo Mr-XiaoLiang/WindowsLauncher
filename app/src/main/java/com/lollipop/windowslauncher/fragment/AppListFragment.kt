@@ -139,10 +139,7 @@ class AppListFragment : BaseFragment() {
                 }
             }
         }
-        viewBinding.searchBtn.apply {
-            setBackgroundColor(LColor.background)
-            imageTintList = ColorStateList.valueOf(LColor.foreground)
-        }
+        viewBinding.searchBtn.updateColor()
         viewBinding.alphabetView.onColorChanged(
             LColor.primary, LColor.primaryReversal, LColor.foreground
         )

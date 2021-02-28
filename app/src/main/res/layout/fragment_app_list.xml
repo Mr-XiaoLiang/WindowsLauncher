@@ -19,10 +19,10 @@
             layout="@layout/item_app_list"/>
 
         <com.lollipop.windowslauncher.views.OvalIconButton
+            style="@style/defOvalIconBtn"
             android:id="@+id/searchBtn"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
             android:layout_marginLeft="18dp"
+            android:layout_marginRight="0px"
             android:src="@drawable/ic_wp_search"/>
     </FrameLayout>
 
