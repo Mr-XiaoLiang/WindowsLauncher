@@ -4,22 +4,27 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <androidx.recyclerview.widget.RecyclerView
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/appListView"
-        android:overScrollMode="never"/>
+        android:id="@+id/appListContent">
+        <androidx.recyclerview.widget.RecyclerView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/appListView"
+            android:overScrollMode="never"/>
 
-    <include
-        android:id="@+id/floatingKey"
-        layout="@layout/item_app_list"/>
+        <include
+            android:id="@+id/floatingKey"
+            layout="@layout/item_app_list"/>
 
-    <com.lollipop.windowslauncher.views.OvalIconButton
-        android:id="@+id/searchBtn"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_marginLeft="18dp"
-        android:src="@drawable/ic_wp_search"/>
+        <com.lollipop.windowslauncher.views.OvalIconButton
+            android:id="@+id/searchBtn"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginLeft="18dp"
+            android:src="@drawable/ic_wp_search"/>
+    </FrameLayout>
 
     <com.lollipop.windowslauncher.views.AlphabetView
         android:layout_width="match_parent"

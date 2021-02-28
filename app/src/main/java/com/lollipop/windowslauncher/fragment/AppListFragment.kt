@@ -53,7 +53,11 @@ class AppListFragment : BaseFragment() {
     private val keyPositionMap = HashMap<String, Int>()
 
     private val appListInsetsHelper by lazy {
-        WindowInsetsHelper(viewBinding.root)
+        WindowInsetsHelper(viewBinding.appListContent)
+    }
+
+    private val alphabetInsetsHelper by lazy {
+        WindowInsetsHelper(viewBinding.alphabetView)
     }
 
     private val appInfoAdapter by lazy {
@@ -147,6 +151,7 @@ class AppListFragment : BaseFragment() {
     override fun onInsetsChange(root: View, left: Int, top: Int, right: Int, bottom: Int) {
         super.onInsetsChange(root, left, top, right, bottom)
         appListInsetsHelper.setInsetsByPadding(left, top, right, bottom)
+        alphabetInsetsHelper.setInsetsByPadding(left, top, right, bottom)
     }
 
     private fun updateAppList() {
