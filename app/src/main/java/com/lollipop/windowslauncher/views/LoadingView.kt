@@ -9,7 +9,7 @@ import android.graphics.drawable.Animatable
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.View
-import com.lollipop.windowslauncher.utils.log
+import android.view.animation.LinearInterpolator
 import com.lollipop.windowslauncher.utils.range
 import kotlin.math.max
 import kotlin.math.min
@@ -36,6 +36,7 @@ class LoadingView(
 
     init {
         getLoadingDrawable()
+        visibility = INVISIBLE
     }
 
     var pointColor: Int
@@ -197,6 +198,7 @@ class LoadingView(
             ValueAnimator().apply {
                 addUpdateListener(this@LoadingDrawable)
                 addListener(this@LoadingDrawable)
+                interpolator = LinearInterpolator()
                 repeatCount = ValueAnimator.INFINITE
             }
         }
@@ -222,8 +224,8 @@ class LoadingView(
             return PixelFormat.TRANSPARENT
         }
 
-        protected fun formatProgress(input: Float): Float {
-            return LoadingAnimationHelper.getInterpolation(input)
+        protected fun formatProgress(input: Float, isLimit: Boolean = true): Float {
+            return LoadingAnimationHelper.formatProgress(input, isLimit)
         }
 
         protected fun allPoint(run: (Int) -> Unit) {
@@ -270,6 +272,8 @@ class LoadingView(
 
     private class ArcLoadingDrawable : LoadingDrawable() {
 
+        private var maxValue = 0F
+
         override fun draw(canvas: Canvas) {
             val radius = pointRadius
             val x = bounds.width() / 2 - radius
@@ -285,30 +289,41 @@ class LoadingView(
         }
 
         private fun getContentAngle(): Float {
-            return progress * 360
+            return (progress / maxValue) * 360
+        }
+
+        private fun checkPointProgress(value: Float): Float {
+            if (value < 1) {
+                return value
+            }
+            return value - 1
         }
 
         private fun getPointAngle(index: Int): Float? {
             val offset = pointOffset * index
             val pointProgress = progress - offset
-            // 模拟出现动作
-            if (pointProgress < 0) {
+            val allAngle = if (pointProgress < 1) {
+                360F
+            } else {
+                360 * (1 - (pointOffset * (pointCount + 1.5F)))
+            }
+            val angle = (formatProgress(
+                checkPointProgress(pointProgress), false)) * allAngle - offset * 360
+            if (pointProgress < 1 && angle < 0) {
                 return null
             }
-            // 模拟收起动作
-            if (pointProgress > 2) {
+            if (pointProgress > 2 && angle > 360) {
                 return null
             }
-            return (formatProgress(
-                pointProgress - pointProgress.toInt()
-            ) - offset) * 360 + 90
+            return angle + 90
         }
 
         override fun start() {
             super.start()
+            maxValue = 2 + loadingWeight * 2
             animator.cancel()
-            animator.duration = LoadingAnimationHelper.DURATION * 3
-            animator.setFloatValues(0F, 2 + (pointWeight * 3))
+            animator.duration = LoadingAnimationHelper.DURATION * 2
+            animator.setFloatValues(0F, maxValue)
             animator.start()
         }
 
@@ -368,13 +383,14 @@ class LoadingView(
          * 使得X = [0, 1]时，Y = [0, 1]，并且接近0.5时发生停顿
          * 可以换成3次函数，但是停顿时间将会变短
          */
-        private fun formatProgress(x: Float): Float {
+        fun formatProgress(input: Float, isLimit: Boolean = true): Float {
+            val x = if (isLimit) { input.range(0F, 1F) } else {input}
             val d = (x - 0.5F) * 2
             return (d * d * d * d * d + 1) / 2
         }
 
         override fun getInterpolation(input: Float): Float {
-            return formatProgress(input.range(0F, 1F))
+            return formatProgress(input)
         }
 
     }
