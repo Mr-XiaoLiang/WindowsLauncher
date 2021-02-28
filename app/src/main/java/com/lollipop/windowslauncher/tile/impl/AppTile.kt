@@ -20,6 +20,11 @@ class AppTile(var appInfo: IconHelper.AppInfo): Tile {
 
     override val tileType = TileType.App
 
+    override fun loadSync(context: Context) {
+        appInfo.getLabel(context)
+        appInfo.loadIcon(context)
+    }
+
     fun loadLabel(context: Context, run: (value: CharSequence) -> Unit) {
         appInfo.loadLabel(context, run)
     }

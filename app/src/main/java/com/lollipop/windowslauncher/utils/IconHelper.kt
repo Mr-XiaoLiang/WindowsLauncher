@@ -101,7 +101,7 @@ class IconHelper private constructor(
         /**
          * 自定义Flag的形式创建
          */
-        fun newHelper(creator: (context: Context) -> DrawableMap?): IconHelper {
+        fun newHelper(creator: ((context: Context) -> DrawableMap?) = { null }): IconHelper {
             return IconHelper(DrawableMapProvider(creator))
         }
 
@@ -272,10 +272,7 @@ class IconHelper private constructor(
         if (drawableMap == null) {
             drawableMap = customizeMap?.getDrawableMap(context)
         }
-        val timeProfiler = timeProfiler()
         loadAppInfoOnly(context)
-        timeProfiler.punch()
-        timeProfiler.punchAndPrintInterval()
         if (autoFix) {
             AppInfoCore.addAppChangeListener(this)
             autoFixCallback = AutoFixCallback(context)

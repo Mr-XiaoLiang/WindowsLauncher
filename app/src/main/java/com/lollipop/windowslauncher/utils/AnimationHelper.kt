@@ -1,6 +1,7 @@
 package com.lollipop.windowslauncher.utils
 
 import android.animation.Animator
+import android.animation.TimeInterpolator
 import android.animation.ValueAnimator
 import android.view.View
 import kotlin.math.abs
@@ -28,6 +29,7 @@ class AnimationHelper(
         ValueAnimator().apply {
             addUpdateListener(this@AnimationHelper)
             addListener(this@AnimationHelper)
+            repeatCount
         }
     }
 
@@ -42,8 +44,20 @@ class AnimationHelper(
 
     private var endProgress = PROGRESS_MAX
 
+    fun setInterpolator(run: TimeInterpolator) {
+        animator.interpolator = run
+    }
+
     fun reset(progress: Float) {
         this.progress = progress
+    }
+
+    fun repeatCount(count: Int) {
+        this.animator.repeatCount = count
+    }
+
+    fun repeatInfinite(isInfinite: Boolean) {
+        repeatCount(if (isInfinite) {ValueAnimator.INFINITE} else { 0 })
     }
 
     fun progressIs(float: Float): Boolean {

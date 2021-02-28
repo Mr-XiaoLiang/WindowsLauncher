@@ -4,8 +4,8 @@ import android.os.Bundle
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentStatePagerAdapter
-import com.lollipop.windowslauncher.base.BaseFragment
 import com.lollipop.windowslauncher.base.BaseActivity
+import com.lollipop.windowslauncher.base.BaseFragment
 import com.lollipop.windowslauncher.databinding.ActivityMainBinding
 import com.lollipop.windowslauncher.fragment.AppListFragment
 import com.lollipop.windowslauncher.fragment.DesktopFragment
@@ -50,7 +50,7 @@ class MainActivity : BaseActivity() {
     private class PageAdapter(
         private val fragments: Array<BaseFragment>,
         fragmentManager: FragmentManager
-    ): FragmentStatePagerAdapter(fragmentManager, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
+    ) : FragmentStatePagerAdapter(fragmentManager, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
 
         override fun getCount(): Int {
             return fragments.size

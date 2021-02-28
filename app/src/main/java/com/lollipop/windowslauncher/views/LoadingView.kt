@@ -1,5 +1,6 @@
 package com.lollipop.windowslauncher.views
 
+import android.animation.Animator
 import android.animation.TimeInterpolator
 import android.animation.ValueAnimator
 import android.content.Context
@@ -8,6 +9,7 @@ import android.graphics.drawable.Animatable
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.View
+import com.lollipop.windowslauncher.utils.log
 import com.lollipop.windowslauncher.utils.range
 import kotlin.math.max
 import kotlin.math.min
@@ -23,8 +25,8 @@ class LoadingView(
     defStyle: Int
 ) : View(context, attrs, defStyle) {
 
-    constructor(context: Context, attr: AttributeSet?): this(context, attr, 0)
-    constructor(context: Context): this(context, null)
+    constructor(context: Context, attr: AttributeSet?) : this(context, attr, 0)
+    constructor(context: Context) : this(context, null)
 
     var style = Style.Line
         set(value) {
@@ -72,8 +74,38 @@ class LoadingView(
             invalidate()
         }
 
-    fun start() {
+    private var onHideCallback: (() -> Unit)? = null
+
+    fun show() {
         getLoadingDrawable().start()
+        visibility = VISIBLE
+    }
+
+    fun hide(callback: (() -> Unit)? = null) {
+        this.onHideCallback = callback
+        if (!getLoadingDrawable().isRunning) {
+            onAnimationStop()
+            return
+        }
+        getLoadingDrawable().stop()
+    }
+
+    fun defArcStyle() {
+        style = Style.Arc
+        pointWeight = 0.15F
+        loadingWeight = 0.3F
+    }
+
+    fun defLineStyle() {
+        style = Style.Line
+        pointWeight = 1F
+        loadingWeight = 0.2F
+    }
+
+    private fun onAnimationStop() {
+        visibility = GONE
+        onHideCallback?.invoke()
+        onHideCallback = null
     }
 
     private fun getLoadingDrawable(): LoadingDrawable {
@@ -104,6 +136,7 @@ class LoadingView(
                     newDrawable.start()
                 }
             }
+            newDrawable.onAnimationStop(::onAnimationStop)
             background = newDrawable
         }
         return newDrawable
@@ -113,8 +146,11 @@ class LoadingView(
         Line, Arc
     }
 
-    private abstract class LoadingDrawable:
-        Drawable(), Animatable, ValueAnimator.AnimatorUpdateListener {
+    private abstract class LoadingDrawable :
+        Drawable(),
+        Animatable,
+        ValueAnimator.AnimatorUpdateListener,
+        Animator.AnimatorListener {
 
         protected val paint = Paint().apply {
             isAntiAlias = true
@@ -150,6 +186,9 @@ class LoadingView(
                 return pointDiameter / 2
             }
 
+        protected var callStop = false
+            private set
+
         protected var pointDiameter = 0F
 
         protected var pointOffset = 0F
@@ -157,13 +196,16 @@ class LoadingView(
         protected val animator by lazy {
             ValueAnimator().apply {
                 addUpdateListener(this@LoadingDrawable)
+                addListener(this@LoadingDrawable)
                 repeatCount = ValueAnimator.INFINITE
             }
         }
 
+        private var onAnimationStopListener: (() -> Unit)? = null
+
         override fun onBoundsChange(bounds: Rect?) {
             super.onBoundsChange(bounds)
-            bounds?:return
+            bounds ?: return
             pointDiameter = min(bounds.width(), bounds.height()) * pointWeight
             pointOffset = loadingWeight / (pointCount - 1)
         }
@@ -190,8 +232,16 @@ class LoadingView(
             }
         }
 
+        fun onAnimationStop(callback: () -> Unit) {
+            this.onAnimationStopListener = callback
+        }
+
+        override fun start() {
+            callStop = false
+        }
+
         override fun stop() {
-            animator.cancel()
+            callStop = true
         }
 
         override fun isRunning(): Boolean {
@@ -204,9 +254,21 @@ class LoadingView(
             }
         }
 
+        override fun onAnimationStart(animation: Animator?) {}
+
+        override fun onAnimationEnd(animation: Animator?) {}
+
+        override fun onAnimationCancel(animation: Animator?) {}
+
+        override fun onAnimationRepeat(animation: Animator?) {
+            if (callStop) {
+                animator.cancel()
+                onAnimationStopListener?.invoke()
+            }
+        }
     }
 
-    private class ArcLoadingDrawable: LoadingDrawable() {
+    private class ArcLoadingDrawable : LoadingDrawable() {
 
         override fun draw(canvas: Canvas) {
             val radius = pointRadius
@@ -238,10 +300,12 @@ class LoadingView(
                 return null
             }
             return (formatProgress(
-                pointProgress - pointProgress.toInt()) - offset) * 360 + 90
+                pointProgress - pointProgress.toInt()
+            ) - offset) * 360 + 90
         }
 
         override fun start() {
+            super.start()
             animator.cancel()
             animator.duration = LoadingAnimationHelper.DURATION * 3
             animator.setFloatValues(0F, 2 + (pointWeight * 3))
@@ -250,7 +314,7 @@ class LoadingView(
 
     }
 
-    private class LineLoadingDrawable: LoadingDrawable() {
+    private class LineLoadingDrawable : LoadingDrawable() {
 
         private var road = 0F
 
@@ -260,7 +324,7 @@ class LoadingView(
 
         override fun onBoundsChange(bounds: Rect?) {
             super.onBoundsChange(bounds)
-            bounds?:return
+            bounds ?: return
             length = max(bounds.width(), bounds.height())
             road = length * (1 + loadingWeight) + pointDiameter
         }
@@ -286,6 +350,7 @@ class LoadingView(
         }
 
         override fun start() {
+            super.start()
             animator.cancel()
             animator.duration = LoadingAnimationHelper.DURATION
             animator.setFloatValues(0F, 1 + loadingWeight)
@@ -294,7 +359,7 @@ class LoadingView(
 
     }
 
-    object LoadingAnimationHelper: TimeInterpolator{
+    object LoadingAnimationHelper : TimeInterpolator {
 
         const val DURATION = 3000L
 
