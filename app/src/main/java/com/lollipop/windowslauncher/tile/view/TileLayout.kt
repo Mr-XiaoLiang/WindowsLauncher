@@ -235,6 +235,10 @@ class TileLayout(
         val snapshot = tileLayoutHelper.getSnapshot()
         val block = tileLayoutHelper.getBlock(index)
         tileLayoutHelper.pushTile(block.x, block.y, block.size, index)
+
+        tileLayoutHelper.diff(snapshot) { index: Int, offsetX: Int, offsetY: Int ->
+
+        }
         TODO(" 布局调整 " )
     }
 

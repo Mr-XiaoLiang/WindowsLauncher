@@ -204,7 +204,7 @@ class TileLayoutHelper(
     fun getSnapshot(): Snapshot {
         val snapshot = Snapshot()
         forEachBlock { _, block ->
-            snapshot.add(block.x, block.y)
+            snapshot.add(block.x, block.y, block.size)
         }
         snapshot.lock()
         return snapshot
@@ -547,11 +547,11 @@ class TileLayoutHelper(
 
         private val locationList = ArrayList<IntArray>()
 
-        fun add(x: Int, y: Int) {
+        fun add(x: Int, y: Int, size: TileSize) {
             if (isLock) {
                 return
             }
-            locationList.add(intArrayOf(x, y))
+            locationList.add(intArrayOf(x, y, size.ordinal))
         }
 
         fun readX(line: Int): Int {
@@ -560,6 +560,10 @@ class TileLayoutHelper(
 
         fun readY(line: Int): Int {
             return locationList[line][1]
+        }
+
+        fun readSize(line: Int): TileSize {
+            return TileSize.values()[locationList[line][2]]
         }
 
         fun lock() {
