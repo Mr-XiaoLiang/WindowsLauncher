@@ -160,7 +160,7 @@ class TileLayoutHelper(
      * 它主要用于几个场景：插入时，拖拽磁块时
      * @return 如果指定的位置不足以放下指定的块，那么将会返回false
      */
-    fun pushTile(x: Int, y: Int, size: TileSize): Boolean {
+    fun pushTile(x: Int, y: Int, size: TileSize, keepBlock: Int = -1): Boolean {
         // 如果已经可用，那么放弃操作
         if (!checkerboard.contains(x, y, size.width, size.height)) {
             return true
@@ -175,8 +175,10 @@ class TileLayoutHelper(
         // 需要一行一行的处理，因为这是金字塔形状的干涉
         for (line in y .. lowestLine.maxLine) {
             // 遍历寻找同一行的元素，进行偏移
-            forEachBlock{_, block ->
-                if (block.y == line && block.overlap(left, right)) {
+            forEachBlock{ index, block ->
+                if (keepBlock != index
+                    && block.y == line
+                    && block.overlap(left, right)) {
                     if (block.x < left) {
                         left = block.x
                     }

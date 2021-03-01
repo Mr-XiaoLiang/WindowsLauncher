@@ -22,6 +22,16 @@ abstract class TileView<T : Tile>(context: Context) : ViewGroup(context) {
 
     private var pendingBind = false
 
+    private var tileGroup: TileGroup? = null
+
+    fun bindGroup(group: TileGroup) {
+        this.tileGroup = group
+    }
+
+    fun unbindGroup() {
+        this.tileGroup = null
+    }
+
     /**
      * 磁块的View可能包含动画
      * 需要在View被展示时激活
@@ -121,4 +131,11 @@ abstract class TileView<T : Tile>(context: Context) : ViewGroup(context) {
         setShadowLayer(2F, 1F, 1F, color)
     }
 
+    interface TileGroup {
+
+        fun notifyTileSizeChange(child: TileView<*>)
+
+        fun notifyTileRemoved(child: TileView<*>)
+
+    }
 }

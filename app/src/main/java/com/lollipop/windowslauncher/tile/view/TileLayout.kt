@@ -20,7 +20,7 @@ class TileLayout(
     context: Context,
     attributeSet: AttributeSet?,
     style: Int
-) : ViewGroup(context, attributeSet, style) {
+) : ViewGroup(context, attributeSet, style), TileView.TileGroup {
 
     constructor(
         context: Context,
@@ -224,6 +224,22 @@ class TileLayout(
                 }
             }
         }
+    }
+
+    override fun notifyTileSizeChange(child: TileView<*>) {
+        val index = indexOfChild(child)
+        if (index < 0) {
+            child.unbindGroup()
+            return
+        }
+        val snapshot = tileLayoutHelper.getSnapshot()
+        val block = tileLayoutHelper.getBlock(index)
+        tileLayoutHelper.pushTile(block.x, block.y, block.size, index)
+        TODO(" 布局调整 " )
+    }
+
+    override fun notifyTileRemoved(child: TileView<*>) {
+        TODO("Not yet implemented")
     }
 
     private fun checkViewStatus(view: View) {
