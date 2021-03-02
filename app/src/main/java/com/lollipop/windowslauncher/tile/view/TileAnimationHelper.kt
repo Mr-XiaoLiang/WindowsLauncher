@@ -1,10 +1,15 @@
 package com.lollipop.windowslauncher.tile.view
 
+import android.animation.Animator
+import android.animation.ValueAnimator
 import android.graphics.Rect
 import android.view.View
+import android.view.ViewManager
 import androidx.annotation.FloatRange
 import androidx.core.view.ViewCompat
 import com.lollipop.windowslauncher.tile.TileSize
+import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.math.max
 
 /**
@@ -12,11 +17,123 @@ import kotlin.math.max
  * @date 3/1/21 22:02
  * 磁块变化的辅助工具
  */
-class TileAnimationHelper {
+class TileAnimationHelper(
+    private val tileLayout: TileLayout,
+    private val sizeProvider: (x: Int, y: Int, size: TileSize) -> Rect
+) : ValueAnimator.AnimatorUpdateListener, Animator.AnimatorListener {
 
-//    private val animationStep =
+    private val valueAnimator by lazy {
+        ValueAnimator().apply {
+            addUpdateListener(this@TileAnimationHelper)
+            addListener(this@TileAnimationHelper)
+        }
+    }
 
-    private class Step {
+    private val animationStep = LinkedList<Step>()
+
+    private var currentStep: Step? = null
+
+    fun notifyTileMove(
+        duration: Long = 300L,
+        from: TileLayoutHelper.Snapshot,
+        to: TileLayoutHelper.Snapshot,
+    ) {
+        notifyTileChange(duration, from, to, -1, false)
+    }
+
+    fun notifyTileInstall(
+        duration: Long = 300L,
+        from: TileLayoutHelper.Snapshot,
+        to: TileLayoutHelper.Snapshot,
+        installIndex: Int
+    ) {
+        notifyTileChange(duration, from, to, installIndex, true)
+    }
+
+    fun notifyTileRemove(
+        duration: Long = 300L,
+        from: TileLayoutHelper.Snapshot,
+        to: TileLayoutHelper.Snapshot,
+        removeIndex: Int
+    ) {
+        notifyTileChange(duration, from, to, removeIndex, false)
+    }
+
+    private fun notifyTileChange(
+        duration: Long = 300L,
+        from: TileLayoutHelper.Snapshot,
+        to: TileLayoutHelper.Snapshot,
+        changeIndex: Int,
+        isAdd: Boolean
+    ) {
+        val childCount = tileLayout.childCount
+        val step = Step(duration)
+        for (i in 0 until childCount) {
+            if (i == changeIndex) {
+                if (isAdd) {
+                    step.install(tileLayout.getChildAt(i))
+                } else {
+                    step.remove(tileLayout.getChildAt(i))
+                }
+            } else if (isChanged(from, to, i)) {
+                step.move(
+                    tileLayout.getChildAt(i),
+                    sizeProvider(from.readX(i), from.readY(i), from.readSize(i)),
+                    sizeProvider(to.readX(i), to.readY(i), to.readSize(i))
+                )
+            }
+        }
+        animationStep.addLast(step)
+        start()
+    }
+
+    private fun isChanged(
+        from: TileLayoutHelper.Snapshot,
+        to: TileLayoutHelper.Snapshot,
+        index: Int
+    ): Boolean {
+        return from.readX(index) != to.readX(index) ||
+                from.readY(index) != to.readY(index) ||
+                from.readSize(index) != to.readSize(index)
+    }
+
+    fun start() {
+        if (valueAnimator.isRunning) {
+            return
+        }
+        if (animationStep.isEmpty()) {
+            return
+        }
+        val newStop = animationStep.removeFirst()
+        currentStep = newStop
+        valueAnimator.duration = newStop.duration
+        valueAnimator.setFloatValues(0F, 1F)
+        valueAnimator.start()
+    }
+
+    override fun onAnimationUpdate(animation: ValueAnimator?) {
+        if (animation == valueAnimator) {
+            currentStep?.doAnimation(animation.animatedValue as Float)
+        }
+    }
+
+    override fun onAnimationStart(animation: Animator?) {
+    }
+
+    override fun onAnimationEnd(animation: Animator?) {
+        if (animation == valueAnimator) {
+            currentStep?.onAnimationEnd()
+            start()
+        }
+    }
+
+    override fun onAnimationCancel(animation: Animator?) {
+    }
+
+    override fun onAnimationRepeat(animation: Animator?) {
+    }
+
+    class Step(val duration: Long) {
         private val blockList = ArrayList<Block>()
 
         fun doAnimation(@FloatRange(from = 0.0, to = 1.0) progress: Float) {
@@ -36,8 +153,8 @@ class TileAnimationHelper {
                         if (from.left != to.left || from.top != to.top) {
                             val left = (to.left - from.left) * progress + from.left
                             val top = (to.top - from.top) * progress + from.top
-                            val offsetX =  left - view.left
-                            val offsetY =  top - view.top
+                            val offsetX = left - view.left
+                            val offsetY = top - view.top
                             ViewCompat.offsetLeftAndRight(view, offsetX.toInt())
                             ViewCompat.offsetTopAndBottom(view, offsetY.toInt())
                         }
@@ -71,29 +188,26 @@ class TileAnimationHelper {
             }
         }
 
-        fun snapshotWith(
-            from: TileLayoutHelper.Snapshot,
-            to: TileLayoutHelper.Snapshot,
-            viewProvider: (Int) -> View,
-            sizeProvider: (x: Int, y: Int, size: TileSize) -> Rect
+        fun remove(view: View) {
+            val bounds = view.getBounds()
+            addBlock(view, bounds, bounds, AnimationType.AlphaOut)
+        }
+
+        fun install(view: View) {
+            val bounds = view.getBounds()
+            addBlock(view, bounds, bounds, AnimationType.AlphaIn)
+        }
+
+        fun move(
+            view: View,
+            from: Rect,
+            to: Rect
         ) {
-            for (i in 0 until max(from.size, to.size)) {
-                when {
-                    from.size <= i -> {
-                        val toLocal = sizeProvider(to.readX(i), to.readY(i), to.readSize(i))
-                        addBlock(viewProvider(i), toLocal, toLocal, AnimationType.AlphaIn)
-                    }
-                    to.size <= i -> {
-                        val fromLocal = sizeProvider(from.readX(i), from.readY(i), from.readSize(i))
-                        addBlock(viewProvider(i), fromLocal, fromLocal, AnimationType.AlphaOut)
-                    }
-                    else -> {
-                        val fromLocal = sizeProvider(from.readX(i), from.readY(i), from.readSize(i))
-                        val toLocal = sizeProvider(to.readX(i), to.readY(i), to.readSize(i))
-                        addBlock(viewProvider(i), fromLocal, toLocal, AnimationType.Move)
-                    }
-                }
-            }
+            addBlock(view, from, to, AnimationType.Move)
+        }
+
+        private fun View.getBounds(): Rect {
+            return Rect(this.left, this.top, this.right, this.bottom)
         }
 
         private fun addBlock(target: View, from: Rect, to: Rect, type: AnimationType) {

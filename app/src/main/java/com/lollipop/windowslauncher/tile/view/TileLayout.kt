@@ -72,10 +72,21 @@ class TileLayout(
 
     private val tileLayoutHelper = TileLayoutHelper(::spanCount, { tileList.size }, ::getTileSize)
 
+    private val tileAnimationHelper by lazy {
+        TileAnimationHelper(this, ::getTileSize)
+    }
+
+    private var tileWidth: Int = 0
+
     init {
         post {
             scrollHelper.resetScrollOffset(false)
         }
+    }
+
+    private fun getTileSize(x: Int, y: Int, size: TileSize): Rect {
+//        val left = TileLayoutHelper.
+        TODO()
     }
 
     private fun getTileSize(index: Int): TileSize {
@@ -85,11 +96,16 @@ class TileLayout(
         return tileList[index].size
     }
 
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        tileWidth = TileLayoutHelper.tileWidth(width, spanCount, space)
+    }
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         tileLayoutHelper.relayout()
         val widthSize = MeasureSpec.getSize(widthMeasureSpec)
         val tileSpace = space
-        val tileWidth = TileLayoutHelper.tileWidth(widthSize, spanCount, tileSpace)
+        tileWidth = TileLayoutHelper.tileWidth(widthSize, spanCount, tileSpace)
         for (i in 0 until childCount) {
             getChildAt(i)?.let { child ->
                 val block = tileLayoutHelper.getBlock(i)
@@ -118,7 +134,7 @@ class TileLayout(
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         val tileSpace = space
-        val tileWidth = TileLayoutHelper.tileWidth(width, spanCount, tileSpace)
+        tileWidth = TileLayoutHelper.tileWidth(width, spanCount, tileSpace)
         val scroll = scrollHelper.scrollOffset * -1
         for (i in 0 until childCount) {
             getChildAt(i)?.let { child ->
@@ -232,18 +248,27 @@ class TileLayout(
             child.unbindGroup()
             return
         }
-        val snapshot = tileLayoutHelper.getSnapshot()
+        val oldSnapshot = tileLayoutHelper.getSnapshot()
         val block = tileLayoutHelper.getBlock(index)
         tileLayoutHelper.pushTile(block.x, block.y, block.size, index)
+        val newSnapshot = tileLayoutHelper.getSnapshot()
 
-        tileLayoutHelper.diff(snapshot) { index: Int, offsetX: Int, offsetY: Int ->
-
-        }
-        TODO(" 布局调整 " )
+        tileAnimationHelper.notifyTileMove(from = oldSnapshot, to = newSnapshot)
     }
 
     override fun notifyTileRemoved(child: TileView<*>) {
-        TODO("Not yet implemented")
+        val index = indexOfChild(child)
+        if (index < 0) {
+            child.unbindGroup()
+            return
+        }
+        val oldSnapshot = tileLayoutHelper.getSnapshot()
+        tileLayoutHelper.notifyTileRemoved(intArrayOf(index))
+        val newSnapshot = tileLayoutHelper.getSnapshot()
+        tileAnimationHelper.notifyTileRemove(
+            from = oldSnapshot,
+            to = newSnapshot,
+            removeIndex = index)
     }
 
     private fun checkViewStatus(view: View) {

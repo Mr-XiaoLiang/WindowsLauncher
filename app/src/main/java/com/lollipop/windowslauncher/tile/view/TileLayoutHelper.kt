@@ -34,6 +34,30 @@ class TileLayoutHelper(
         fun tileWidth(width: Int, spanCount: Int, space: Int): Int {
             return (width - space) / spanCount - space
         }
+
+        fun blockLeft(tileWidth: Int, space: Int, x: Int): Int {
+            return blockEdge(tileWidth, space, x)
+        }
+
+        fun blockTop(tileWidth: Int, space: Int, y: Int): Int {
+            return blockEdge(tileWidth, space, y)
+        }
+
+        fun blockWidth(tileWidth: Int, space: Int, size: TileSize): Int {
+            return blockSideLength(tileWidth, space, size.width)
+        }
+
+        fun blockHeight(tileWidth: Int, space: Int, size: TileSize): Int {
+            return blockSideLength(tileWidth, space, size.height)
+        }
+
+        private fun blockEdge(tileWidth: Int, space: Int, index: Int): Int {
+            return (tileWidth + space) * index + space
+        }
+
+        private fun blockSideLength(tileWidth: Int, space: Int, span: Int): Int {
+            return (tileWidth + space) * span - space
+        }
     }
 
     /**
@@ -94,7 +118,7 @@ class TileLayoutHelper(
         // 检查并记录位置
         forEachBlock { _, block ->
             // 先放弃没有布局的
-            if (block.hasLayout) {
+            if (block.hasLayout && block.active) {
                 if (checkLayout(block)) {
                     // 重制重叠的块
                     block.resetLayout()
@@ -127,7 +151,8 @@ class TileLayoutHelper(
      */
     fun notifyTileRemoved(indexArray: IntArray) {
         for (index in indexArray) {
-            val block = blockList.removeAt(index)
+            val block = blockList[index]
+            block.callRemove()
             checkerboard.remove(block.x, block.y, block.size.width, block.size.height)
         }
         lowestLine.checkLast()
@@ -204,7 +229,7 @@ class TileLayoutHelper(
     fun getSnapshot(): Snapshot {
         val snapshot = Snapshot()
         forEachBlock { _, block ->
-            snapshot.add(block.x, block.y, block.size)
+            snapshot.add(block.x, block.y, !block.pendingRemove, block.size)
         }
         snapshot.lock()
         return snapshot
@@ -216,17 +241,19 @@ class TileLayoutHelper(
      * 目的在于方便UI进行更新同步（只变更变化的部分）
      */
     fun diff(snapshot: Snapshot,
-        run: (index: Int, offsetX: Int, offsetY: Int) -> Unit
+        run: (index: Int, offsetX: Int, offsetY: Int, size: TileSize) -> Unit
     ) {
         forEachBlock { index, block ->
             if (index < snapshot.size) {
                 val readX = snapshot.readX(index)
                 val readY = snapshot.readY(index)
-                if (readX != block.x || readY != block.y) {
+                val readSize = snapshot.readSize(index)
+                if (readX != block.x || readY != block.y || readSize != block.size) {
                     run(
                         index,
                         block.x - readX,
-                        block.y - readY
+                        block.y - readY,
+                        block.size
                     )
                 }
             }
@@ -275,6 +302,20 @@ class TileLayoutHelper(
     }
 
     /**
+     * 自动移除无用的块
+     */
+    fun autoRemoveBlock(run: (index: Int, block: Block) -> Unit) {
+        val removedList = ArrayList<Block>()
+        forEachBlock { index, block ->
+            if (block.pendingRemove) {
+                run(index, block)
+                removedList.add(block)
+            }
+        }
+        blockList.removeAll(removedList)
+    }
+
+    /**
      * 恢复镜像的布局内容
      * 用于临时排版结束时恢复
      * 或者拖拽磁块时位置移动了，
@@ -318,7 +359,7 @@ class TileLayoutHelper(
     private fun layoutFreeBlock() {
         // 重组游离的块
         forEachBlock { _, block ->
-            if (!block.hasLayout) {
+            if (!block.hasLayout && block.active) {
                 val space = findSpace(block.size.width)
                 if (space.x >= 0 && space.y >= 0) {
                     block.appoint(space)
@@ -360,6 +401,9 @@ class TileLayoutHelper(
     }
 
     private fun Checkerboard.put(block: Block) {
+        if (block.pendingRemove) {
+            return
+        }
         put(block.x, block.y, block.size.width, block.size.height)
     }
 
@@ -375,6 +419,9 @@ class TileLayoutHelper(
     }
 
     private fun LowestLine.checkLast(block: Block) {
+        if (block.pendingRemove) {
+            return
+        }
         addLast(block.x, block.size.width, block.y + block.size.height)
     }
 
@@ -465,12 +512,26 @@ class TileLayoutHelper(
                 return x >= 0 || y >= 0
             }
 
+        var pendingRemove = false
+            private set
+
+        val active: Boolean
+            get() {
+                return !pendingRemove
+            }
+
         fun resetLayout() {
+            if (pendingRemove) {
+                return
+            }
             this.x = -1
             this.y = -1
         }
 
         fun offsetY(offset: Int) {
+            if (pendingRemove) {
+                return
+            }
             this.y += offset
         }
 
@@ -479,11 +540,17 @@ class TileLayoutHelper(
         }
 
         fun appoint(x: Int, y: Int) {
+            if (pendingRemove) {
+                return
+            }
             this.x = x
             this.y = y
         }
 
         fun overlap(left: Int, right: Int): Boolean {
+            if (pendingRemove) {
+                return false
+            }
             val x1 = x
             val x2 = x1 + size.width
             if (left <= x1 && right >= x2) {
@@ -508,11 +575,11 @@ class TileLayoutHelper(
         }
 
         fun left(tileWidth: Int, space: Int): Int {
-            return tileEdge(tileWidth, space, x)
+            return blockLeft(tileWidth, space, x)
         }
 
         fun top(tileWidth: Int, space: Int): Int {
-            return tileEdge(tileWidth, space, y)
+            return blockTop(tileWidth, space, y)
         }
 
         fun right(tileWidth: Int, space: Int): Int {
@@ -523,20 +590,16 @@ class TileLayoutHelper(
             return top(tileWidth, space) + height(tileWidth, space)
         }
 
-        private fun tileEdge(tileWidth: Int, space: Int, index: Int): Int {
-            return (tileWidth + space) * index + space
-        }
-
         fun width(tileWidth: Int, space: Int): Int {
-            return sideLength(tileWidth, space, size.width)
+            return blockWidth(tileWidth, space, size)
         }
 
         fun height(tileWidth: Int, space: Int): Int {
-            return sideLength(tileWidth, space, size.height)
+            return blockHeight(tileWidth, space, size)
         }
 
-        private fun sideLength(tileWidth: Int, space: Int, span: Int): Int {
-            return (tileWidth + space) * span - space
+        fun callRemove() {
+            this.pendingRemove = true
         }
 
     }
@@ -547,11 +610,12 @@ class TileLayoutHelper(
 
         private val locationList = ArrayList<IntArray>()
 
-        fun add(x: Int, y: Int, size: TileSize) {
+        fun add(x: Int, y: Int, active: Boolean, size: TileSize) {
             if (isLock) {
                 return
             }
-            locationList.add(intArrayOf(x, y, size.ordinal))
+            val activeFlag = if (active) { 1 } else { 0 }
+            locationList.add(intArrayOf(x, y, activeFlag, size.ordinal))
         }
 
         fun readX(line: Int): Int {
@@ -562,8 +626,12 @@ class TileLayoutHelper(
             return locationList[line][1]
         }
 
+        fun isActive(line: Int): Boolean {
+            return locationList[line][2] > 0
+        }
+
         fun readSize(line: Int): TileSize {
-            return TileSize.values()[locationList[line][2]]
+            return TileSize.values()[locationList[line][3]]
         }
 
         fun lock() {
