@@ -102,6 +102,10 @@ abstract class TileView<T : Tile>(context: Context) : ViewGroup(context) {
         tileViewHelper.notifyTileChange()
     }
 
+    fun callLayoutTile() {
+        tileGroup?.requestLayoutMe(this)
+    }
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         var maxWidth = 0
         var maxHeight = 0
@@ -136,6 +140,8 @@ abstract class TileView<T : Tile>(context: Context) : ViewGroup(context) {
         fun notifyTileSizeChange(child: TileView<*>)
 
         fun notifyTileRemoved(child: TileView<*>)
+
+        fun requestLayoutMe(child: TileView<*>)
 
     }
 }

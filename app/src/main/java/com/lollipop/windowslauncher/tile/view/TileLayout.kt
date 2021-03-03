@@ -72,10 +72,6 @@ class TileLayout(
 
     private val tileLayoutHelper = TileLayoutHelper(::spanCount, { tileList.size }, ::getTileSize)
 
-    private val tileAnimationHelper by lazy {
-        TileAnimationHelper(this, ::getTileSize)
-    }
-
     private var tileWidth: Int = 0
 
     init {
@@ -85,8 +81,11 @@ class TileLayout(
     }
 
     private fun getTileSize(x: Int, y: Int, size: TileSize): Rect {
-//        val left = TileLayoutHelper.
-        TODO()
+        val left = TileLayoutHelper.blockLeft(tileWidth, space, x)
+        val top = TileLayoutHelper.blockTop(tileWidth, space, y)
+        val blockWidth = TileLayoutHelper.blockWidth(tileWidth, space, size)
+        val blockHeight = TileLayoutHelper.blockHeight(tileWidth, space, size)
+        return Rect(left, top, left + blockWidth, top + blockHeight)
     }
 
     private fun getTileSize(index: Int): TileSize {
@@ -242,33 +241,73 @@ class TileLayout(
         }
     }
 
-    override fun notifyTileSizeChange(child: TileView<*>) {
-        val index = indexOfChild(child)
-        if (index < 0) {
-            child.unbindGroup()
-            return
+    override fun addView(child: View?) {
+        super.addView(child)
+        if (child is TileView<*>) {
+            child.bindGroup(this)
         }
-        val oldSnapshot = tileLayoutHelper.getSnapshot()
-        val block = tileLayoutHelper.getBlock(index)
-        tileLayoutHelper.pushTile(block.x, block.y, block.size, index)
-        val newSnapshot = tileLayoutHelper.getSnapshot()
+    }
 
-        tileAnimationHelper.notifyTileMove(from = oldSnapshot, to = newSnapshot)
+    override fun removeView(view: View?) {
+        super.removeView(view)
+        if (view is TileView<*>) {
+            view.unbindGroup()
+        }
+    }
+
+    override fun removeViewAt(index: Int) {
+        getChildAt(index)?.let {
+            if (it is TileView<*>) {
+                it.unbindGroup()
+            }
+        }
+        super.removeViewAt(index)
+    }
+
+    override fun notifyTileSizeChange(child: TileView<*>) {
+//        val index = indexOfChild(child)
+//        if (index < 0) {
+//            child.unbindGroup()
+//            return
+//        }
+//        val oldSnapshot = tileLayoutHelper.getSnapshot()
+//        val block = tileLayoutHelper.getBlock(index)
+//        tileLayoutHelper.pushTile(block.x, block.y, block.size, index)
+//        val newSnapshot = tileLayoutHelper.getSnapshot()
+//
+//        tileAnimationHelper.notifyTileMove(from = oldSnapshot, to = newSnapshot)
     }
 
     override fun notifyTileRemoved(child: TileView<*>) {
+//        val index = indexOfChild(child)
+//        if (index < 0) {
+//            child.unbindGroup()
+//            return
+//        }
+//        val oldSnapshot = tileLayoutHelper.getSnapshot()
+//        tileLayoutHelper.notifyTileRemoved(intArrayOf(index))
+//        val newSnapshot = tileLayoutHelper.getSnapshot()
+//        tileAnimationHelper.notifyTileRemove(
+//            from = oldSnapshot,
+//            to = newSnapshot,
+//            removeIndex = index)
+    }
+
+    override fun requestLayoutMe(child: TileView<*>) {
         val index = indexOfChild(child)
         if (index < 0) {
             child.unbindGroup()
             return
         }
-        val oldSnapshot = tileLayoutHelper.getSnapshot()
-        tileLayoutHelper.notifyTileRemoved(intArrayOf(index))
-        val newSnapshot = tileLayoutHelper.getSnapshot()
-        tileAnimationHelper.notifyTileRemove(
-            from = oldSnapshot,
-            to = newSnapshot,
-            removeIndex = index)
+        val block = tileLayoutHelper.getBlock(index)
+        val tileSpace = space
+        val scroll = scrollHelper.scrollOffset * -1
+        child.layout(
+            block.left(tileWidth, tileSpace),
+            block.top(tileWidth, tileSpace) + scroll,
+            block.right(tileWidth, tileSpace),
+            block.bottom(tileWidth, tileSpace) + scroll,
+        )
     }
 
     private fun checkViewStatus(view: View) {

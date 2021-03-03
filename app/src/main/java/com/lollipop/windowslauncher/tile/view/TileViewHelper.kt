@@ -6,6 +6,7 @@ import android.graphics.drawable.Animatable
 import android.view.View
 import androidx.core.view.ViewCompat
 import com.lollipop.windowslauncher.tile.Tile
+import com.lollipop.windowslauncher.tile.TileSize
 import com.lollipop.windowslauncher.utils.onUI
 import com.lollipop.windowslauncher.utils.task
 
@@ -24,10 +25,16 @@ class TileViewHelper(private val tileView: TileView<*>) {
     private val tileAnimatorList = ArrayList<Animatable>()
 
     private val moveAnimation by lazy {
-        AnimationTask(tileView, ANIMATION_DURATION_SHORT)
+        AnimationTask(tileView, ANIMATION_DURATION_SHORT).apply {
+            onEnd(::onAnimationEnd)
+        }
     }
 
     private var myTile: Tile? = null
+
+    private fun onAnimationEnd() {
+        tileView.callLayoutTile()
+    }
 
     fun onResume() {
         tileAnimatorList.forEach {
@@ -47,6 +54,10 @@ class TileViewHelper(private val tileView: TileView<*>) {
 
     fun moveTo(x: Int, y: Int, delay: Long, duration: Long = ANIMATION_DURATION_SHORT) {
         moveAnimation.reset().duration(duration).moveX(end = x).moveY(end = y).delay(delay)
+    }
+
+    fun resize(newSize: TileSize) {
+
     }
 
     fun notifyTileChange() {
@@ -75,6 +86,8 @@ class TileViewHelper(private val tileView: TileView<*>) {
 
         private var animatorInit = false
 
+        private var onEndCallback: (() -> Unit)? = null
+
         private val animator by lazy {
             animatorInit = true
             ValueAnimator().apply {
@@ -85,6 +98,10 @@ class TileViewHelper(private val tileView: TileView<*>) {
 
         private val runner = task {
             start()
+        }
+
+        fun onEnd(callback: () -> Unit) {
+            this.onEndCallback = callback
         }
 
         fun moveX(start: Int = target.x.toInt(), end: Int): AnimationTask {
@@ -171,6 +188,7 @@ class TileViewHelper(private val tileView: TileView<*>) {
         }
 
         override fun onAnimationEnd(animation: Animator?) {
+            onEndCallback?.invoke()
         }
 
         override fun onAnimationCancel(animation: Animator?) {
