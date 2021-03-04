@@ -103,6 +103,14 @@ abstract class TileView<T : Tile>(context: Context) : ViewGroup(context) {
     }
 
     fun callLayoutTile() {
+        scaleX = 1F
+        scaleY = 1F
+        translationX = 0F
+        translationY = 0F
+        translationZ = 0F
+        rotationX = 0F
+        rotationY = 0F
+
         tileGroup?.requestLayoutMe(this)
     }
 

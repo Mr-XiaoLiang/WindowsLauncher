@@ -2,6 +2,7 @@ package com.lollipop.windowslauncher.tile.view
 
 import android.animation.Animator
 import android.animation.ValueAnimator
+import android.graphics.Rect
 import android.graphics.drawable.Animatable
 import android.view.View
 import androidx.core.view.ViewCompat
@@ -25,16 +26,10 @@ class TileViewHelper(private val tileView: TileView<*>) {
     private val tileAnimatorList = ArrayList<Animatable>()
 
     private val moveAnimation by lazy {
-        AnimationTask(tileView, ANIMATION_DURATION_SHORT).apply {
-            onEnd(::onAnimationEnd)
-        }
+        AnimationTask(tileView, ANIMATION_DURATION_SHORT)
     }
 
     private var myTile: Tile? = null
-
-    private fun onAnimationEnd() {
-        tileView.callLayoutTile()
-    }
 
     fun onResume() {
         tileAnimatorList.forEach {
@@ -53,11 +48,27 @@ class TileViewHelper(private val tileView: TileView<*>) {
     }
 
     fun moveTo(x: Int, y: Int, delay: Long, duration: Long = ANIMATION_DURATION_SHORT) {
-        moveAnimation.reset().duration(duration).moveX(end = x).moveY(end = y).delay(delay)
+        moveAnimation.reset().duration(duration).moveX(end = x).moveY(end = y).delay(delay) {
+            tileView.callLayoutTile()
+        }
     }
 
-    fun resize(newSize: TileSize) {
-
+    fun resize(newSize: Rect, delay: Long, duration: Long = ANIMATION_DURATION_SHORT) {
+        val scaleX = newSize.width() * 1F / tileView.width
+        val scaleY = newSize.height() * 1F / tileView.height
+        val translationX = (newSize.width() - tileView.width) * 0.5F
+        val translationY = (newSize.height() - tileView.height) * 0.5F
+        val oldTranslationX = tileView.translationX
+        val oldTranslationY = tileView.translationY
+        moveAnimation.reset()
+            .duration(duration)
+            .scaleX(1F, scaleX)
+            .scaleY(1F, scaleY)
+            .translationX(oldTranslationX, oldTranslationX + translationX)
+            .translationY(oldTranslationY, oldTranslationY + translationY)
+            .delay(delay) {
+                tileView.callLayoutTile()
+            }
     }
 
     fun notifyTileChange() {
@@ -79,7 +90,7 @@ class TileViewHelper(private val tileView: TileView<*>) {
     class AnimationTask(
         private val target: View,
         private var duration: Long = ANIMATION_DURATION_LONG
-    ): ValueAnimator.AnimatorUpdateListener,
+    ) : ValueAnimator.AnimatorUpdateListener,
         Animator.AnimatorListener {
 
         private val attributeList = ArrayList<Attribute<*>>()
@@ -98,10 +109,6 @@ class TileViewHelper(private val tileView: TileView<*>) {
 
         private val runner = task {
             start()
-        }
-
-        fun onEnd(callback: () -> Unit) {
-            this.onEndCallback = callback
         }
 
         fun moveX(start: Int = target.x.toInt(), end: Int): AnimationTask {
@@ -127,6 +134,51 @@ class TileViewHelper(private val tileView: TileView<*>) {
                 target.z = start
             }, { now, _ ->
                 target.z = now
+            }))
+            return this
+        }
+
+        fun scaleX(start: Float = target.scaleX, end: Float): AnimationTask {
+            attributeList.add(FloatAttribute(start, end, {
+                target.scaleX = start
+            }, { now, _ ->
+                target.scaleX = now
+            }))
+            return this
+        }
+
+        fun scaleY(start: Float = target.scaleY, end: Float): AnimationTask {
+            attributeList.add(FloatAttribute(start, end, {
+                target.scaleY = start
+            }, { now, _ ->
+                target.scaleY = now
+            }))
+            return this
+        }
+
+        fun translationX(start: Float = target.translationX, end: Float): AnimationTask {
+            attributeList.add(FloatAttribute(start, end, {
+                target.translationX = start
+            }, { now, _ ->
+                target.translationX = now
+            }))
+            return this
+        }
+
+        fun translationY(start: Float = target.translationY, end: Float): AnimationTask {
+            attributeList.add(FloatAttribute(start, end, {
+                target.translationY = start
+            }, { now, _ ->
+                target.translationY = now
+            }))
+            return this
+        }
+
+        fun translationZ(start: Float = target.translationZ, end: Float): AnimationTask {
+            attributeList.add(FloatAttribute(start, end, {
+                target.translationZ = start
+            }, { now, _ ->
+                target.translationZ = now
             }))
             return this
         }
@@ -161,8 +213,9 @@ class TileViewHelper(private val tileView: TileView<*>) {
             animator.start()
         }
 
-        fun delay(delay: Long = 0) {
+        fun delay(delay: Long = 0, callback: (() -> Unit)? = null) {
             runner.cancel()
+            this.onEndCallback = callback
             runner.delay(delay)
         }
 
@@ -189,6 +242,7 @@ class TileViewHelper(private val tileView: TileView<*>) {
 
         override fun onAnimationEnd(animation: Animator?) {
             onEndCallback?.invoke()
+            onEndCallback = null
         }
 
         override fun onAnimationCancel(animation: Animator?) {
@@ -222,7 +276,7 @@ class TileViewHelper(private val tileView: TileView<*>) {
         start: Int, to: Int,
         private val prepare: (now: Int) -> Unit,
         private val callback: (now: Int, offset: Int) -> Unit
-    ): Attribute<Int>(start, to) {
+    ) : Attribute<Int>(start, to) {
 
         private var now = start
 
@@ -243,7 +297,7 @@ class TileViewHelper(private val tileView: TileView<*>) {
         start: Float, to: Float,
         private val prepare: (now: Float) -> Unit,
         private val callback: (now: Float, offset: Float) -> Unit
-    ): Attribute<Float>(start, to) {
+    ) : Attribute<Float>(start, to) {
         private var now = start
         override fun run(progress: Float, start: Float, to: Float) {
             val newValue = (to - start) * progress + start
