@@ -8,6 +8,7 @@ import android.view.View
 import androidx.core.view.ViewCompat
 import com.lollipop.windowslauncher.tile.Tile
 import com.lollipop.windowslauncher.tile.TileSize
+import com.lollipop.windowslauncher.utils.dp2px
 import com.lollipop.windowslauncher.utils.onUI
 import com.lollipop.windowslauncher.utils.task
 
@@ -69,6 +70,24 @@ class TileViewHelper(private val tileView: TileView<*>) {
             .delay(delay) {
                 tileView.callLayoutTile()
             }
+    }
+
+    fun float(delay: Long, duration: Long = ANIMATION_DURATION_SHORT) {
+        moveAnimation.reset()
+            .duration(duration)
+            .scaleX(end = 1.2F)
+            .scaleY(end = 1.2F)
+            .translationZ(end = 10F.dp2px())
+            .delay(delay)
+    }
+
+    fun sink(delay: Long, duration: Long = ANIMATION_DURATION_SHORT) {
+        moveAnimation.reset()
+            .duration(duration)
+            .scaleX(end = 1F)
+            .scaleY(end = 1F)
+            .translationZ(end = 0F)
+            .delay(delay)
     }
 
     fun notifyTileChange() {
