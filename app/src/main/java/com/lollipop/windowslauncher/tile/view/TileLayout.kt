@@ -265,32 +265,48 @@ class TileLayout(
     }
 
     override fun notifyTileSizeChange(child: TileView<*>) {
-//        val index = indexOfChild(child)
-//        if (index < 0) {
-//            child.unbindGroup()
-//            return
-//        }
-//        val oldSnapshot = tileLayoutHelper.getSnapshot()
-//        val block = tileLayoutHelper.getBlock(index)
-//        tileLayoutHelper.pushTile(block.x, block.y, block.size, index)
-//        val newSnapshot = tileLayoutHelper.getSnapshot()
-//
-//        tileAnimationHelper.notifyTileMove(from = oldSnapshot, to = newSnapshot)
+        val index = indexOfChild(child)
+        if (index < 0) {
+            child.unbindGroup()
+            return
+        }
+        val oldSnapshot = tileLayoutHelper.getSnapshot()
+        val block = tileLayoutHelper.getBlock(index)
+        block.size = tileList[index].size
+        tileLayoutHelper.pushTile(block.x, block.y, block.size, index)
+        child.resizeTo(Rect(
+            block.left(tileWidth, space),
+            block.top(tileWidth, space),
+            block.right(tileWidth, space),
+            block.bottom(tileWidth, space)
+        ))
+        moveIfViewChanged(oldSnapshot)
     }
 
     override fun notifyTileRemoved(child: TileView<*>) {
-//        val index = indexOfChild(child)
-//        if (index < 0) {
-//            child.unbindGroup()
-//            return
-//        }
-//        val oldSnapshot = tileLayoutHelper.getSnapshot()
-//        tileLayoutHelper.notifyTileRemoved(intArrayOf(index))
-//        val newSnapshot = tileLayoutHelper.getSnapshot()
-//        tileAnimationHelper.notifyTileRemove(
-//            from = oldSnapshot,
-//            to = newSnapshot,
-//            removeIndex = index)
+        val index = indexOfChild(child)
+        if (index < 0) {
+            child.unbindGroup()
+            return
+        }
+        val oldSnapshot = tileLayoutHelper.getSnapshot()
+        tileLayoutHelper.notifyTileRemoved(intArrayOf(index))
+        child.alpha(0F)
+        moveIfViewChanged(oldSnapshot)
+    }
+
+    private fun moveIfViewChanged(oldSnapshot: TileLayoutHelper.Snapshot) {
+        tileLayoutHelper.diff(oldSnapshot) {
+                i, block ->
+            getChildAt(i)?.let {
+                if (it is TileView<*>) {
+                    it.moveTo(
+                        block.left(tileWidth, space),
+                        block.top(tileWidth, space)
+                    )
+                }
+            }
+        }
     }
 
     override fun requestLayoutMe(child: TileView<*>) {

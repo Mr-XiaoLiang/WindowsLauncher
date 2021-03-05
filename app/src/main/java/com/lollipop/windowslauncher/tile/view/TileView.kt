@@ -106,6 +106,13 @@ abstract class TileView<T : Tile>(context: Context) : ViewGroup(context) {
         tileViewHelper.sink(delay)
     }
 
+    /**
+     * 透明度变化
+     */
+    open fun alpha(alpha: Float, delay: Long = 0) {
+        tileViewHelper.alpha(alpha, delay)
+    }
+
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         tileViewHelper.onAttached()

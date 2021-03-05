@@ -90,6 +90,15 @@ class TileViewHelper(private val tileView: TileView<*>) {
             .delay(delay)
     }
 
+    fun alpha(alpha: Float, delay: Long, duration: Long = ANIMATION_DURATION_SHORT) {
+        moveAnimation.reset()
+            .duration(duration)
+            .alpha(end = alpha)
+            .delay(delay) {
+                tileView.callLayoutTile()
+            }
+    }
+
     fun notifyTileChange() {
         myTile?.let {
             onUI {
@@ -174,6 +183,16 @@ class TileViewHelper(private val tileView: TileView<*>) {
             }))
             return this
         }
+
+        fun alpha(start: Float = target.alpha, end: Float): AnimationTask {
+            attributeList.add(FloatAttribute(start, end, {
+                target.alpha = start
+            }, { now, _ ->
+                target.alpha = now
+            }))
+            return this
+        }
+
 
         fun translationX(start: Float = target.translationX, end: Float): AnimationTask {
             attributeList.add(FloatAttribute(start, end, {

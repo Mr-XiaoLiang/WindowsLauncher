@@ -241,7 +241,7 @@ class TileLayoutHelper(
      * 目的在于方便UI进行更新同步（只变更变化的部分）
      */
     fun diff(snapshot: Snapshot,
-        run: (index: Int, offsetX: Int, offsetY: Int, size: TileSize) -> Unit
+        run: (index: Int, block: Block) -> Unit
     ) {
         forEachBlock { index, block ->
             if (index < snapshot.size) {
@@ -249,12 +249,7 @@ class TileLayoutHelper(
                 val readY = snapshot.readY(index)
                 val readSize = snapshot.readSize(index)
                 if (readX != block.x || readY != block.y || readSize != block.size) {
-                    run(
-                        index,
-                        block.x - readX,
-                        block.y - readY,
-                        block.size
-                    )
+                    run(index,block)
                 }
             }
         }
