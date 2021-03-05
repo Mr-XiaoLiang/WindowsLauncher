@@ -1,6 +1,7 @@
 package com.lollipop.windowslauncher.tile.view
 
 import android.content.Context
+import android.graphics.Rect
 import android.view.ViewGroup
 import android.widget.TextView
 import com.lollipop.windowslauncher.theme.LColor
@@ -82,6 +83,27 @@ abstract class TileView<T : Tile>(context: Context) : ViewGroup(context) {
      */
     open fun moveTo(x: Int, y: Int, delay: Long = 0) {
         tileViewHelper.moveTo(x, y, delay)
+    }
+
+    /**
+     * 重设大小
+     */
+    open fun resizeTo(bounds: Rect, delay: Long = 0) {
+        tileViewHelper.resize(bounds, delay)
+    }
+
+    /**
+     * 浮起
+     */
+    open fun float(delay: Long = 0) {
+        tileViewHelper.float(delay)
+    }
+
+    /**
+     * 降下
+     */
+    open fun sink(delay: Long = 0) {
+        tileViewHelper.sink(delay)
     }
 
     override fun onAttachedToWindow() {
