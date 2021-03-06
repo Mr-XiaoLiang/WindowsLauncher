@@ -7,7 +7,7 @@ import android.graphics.drawable.Animatable
 import android.view.View
 import androidx.core.view.ViewCompat
 import com.lollipop.windowslauncher.tile.Tile
-import com.lollipop.windowslauncher.tile.TileSize
+import com.lollipop.windowslauncher.utils.LSettings
 import com.lollipop.windowslauncher.utils.dp2px
 import com.lollipop.windowslauncher.utils.onUI
 import com.lollipop.windowslauncher.utils.task
@@ -73,10 +73,12 @@ class TileViewHelper(private val tileView: TileView<*>) {
     }
 
     fun float(delay: Long, duration: Long = ANIMATION_DURATION_SHORT) {
+        val space = LSettings.getCreviceMode(tileView.context).dp.dp2px()
+        val scale = space / tileView.width + 1
         moveAnimation.reset()
             .duration(duration)
-            .scaleX(end = 1.1F)
-            .scaleY(end = 1.1F)
+            .scaleX(end = scale)
+            .scaleY(end = scale)
             .translationZ(end = 10F.dp2px())
             .delay(delay)
     }
