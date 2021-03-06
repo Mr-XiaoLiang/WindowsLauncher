@@ -2,6 +2,7 @@ package com.lollipop.windowslauncher.tile.view
 
 import android.content.Context
 import android.graphics.Rect
+import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import com.lollipop.windowslauncher.theme.LColor
@@ -12,7 +13,7 @@ import com.lollipop.windowslauncher.tile.Tile
  * @date 2/15/21 16:40
  * 磁块展示的View
  */
-abstract class TileView<T : Tile>(context: Context) : ViewGroup(context) {
+abstract class TileView<T : Tile>(context: Context) : ViewGroup(context), View.OnLongClickListener {
 
     /**
      * 磁块的View辅助工具
@@ -27,10 +28,12 @@ abstract class TileView<T : Tile>(context: Context) : ViewGroup(context) {
 
     fun bindGroup(group: TileGroup) {
         this.tileGroup = group
+        setOnLongClickListener(this)
     }
 
     fun unbindGroup() {
         this.tileGroup = null
+        setOnLongClickListener(null)
     }
 
     /**
@@ -97,6 +100,7 @@ abstract class TileView<T : Tile>(context: Context) : ViewGroup(context) {
      */
     open fun float(delay: Long = 0) {
         tileViewHelper.float(delay)
+        tileGroup?.onFloating(this)
     }
 
     /**
@@ -111,6 +115,14 @@ abstract class TileView<T : Tile>(context: Context) : ViewGroup(context) {
      */
     open fun alpha(alpha: Float, delay: Long = 0) {
         tileViewHelper.alpha(alpha, delay)
+    }
+
+    override fun onLongClick(v: View?): Boolean {
+        if (v == this) {
+            float()
+            return true
+        }
+        return false
     }
 
     override fun onAttachedToWindow() {
@@ -179,6 +191,8 @@ abstract class TileView<T : Tile>(context: Context) : ViewGroup(context) {
         fun notifyTileRemoved(child: TileView<*>)
 
         fun requestLayoutMe(child: TileView<*>)
+
+        fun onFloating(child: TileView<*>)
 
     }
 }

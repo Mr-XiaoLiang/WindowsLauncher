@@ -75,8 +75,8 @@ class TileViewHelper(private val tileView: TileView<*>) {
     fun float(delay: Long, duration: Long = ANIMATION_DURATION_SHORT) {
         moveAnimation.reset()
             .duration(duration)
-            .scaleX(end = 1.2F)
-            .scaleY(end = 1.2F)
+            .scaleX(end = 1.1F)
+            .scaleY(end = 1.1F)
             .translationZ(end = 10F.dp2px())
             .delay(delay)
     }

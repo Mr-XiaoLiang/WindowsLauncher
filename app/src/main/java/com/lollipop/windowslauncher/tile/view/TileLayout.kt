@@ -7,6 +7,8 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import com.lollipop.windowslauncher.listener.BackPressedListener
+import com.lollipop.windowslauncher.listener.BackPressedProvider
 import com.lollipop.windowslauncher.tile.Tile
 import com.lollipop.windowslauncher.tile.TileSize
 import com.lollipop.windowslauncher.views.ScrollHelper
@@ -20,7 +22,7 @@ class TileLayout(
     context: Context,
     attributeSet: AttributeSet?,
     style: Int
-) : ViewGroup(context, attributeSet, style), TileView.TileGroup {
+) : ViewGroup(context, attributeSet, style), TileView.TileGroup, BackPressedListener {
 
     constructor(
         context: Context,
@@ -49,10 +51,6 @@ class TileLayout(
 
     private val viewInsets = Rect()
 
-//    private val longPressTime: Int by lazy {
-//        ViewConfiguration.getLongPressTimeout()
-//    }
-
     private val contentHeight: Int
         get() {
             val tileWidth = TileLayoutHelper.tileWidth(width, spanCount, space)
@@ -62,30 +60,20 @@ class TileLayout(
 
     private val scrollHelper = ScrollHelper(
         this,
-        {
-            contentHeight - height
-        },
-        {
-            viewInsets.top * -1
-        }
+        { contentHeight - height },
+        { viewInsets.top * -1 }
     )
 
     private val tileLayoutHelper = TileLayoutHelper(::spanCount, { tileList.size }, ::getTileSize)
 
     private var tileWidth: Int = 0
 
+    private var floatingChild: TileView<*>? = null
+
     init {
         post {
             scrollHelper.resetScrollOffset(false)
         }
-    }
-
-    private fun getTileSize(x: Int, y: Int, size: TileSize): Rect {
-        val left = TileLayoutHelper.blockLeft(tileWidth, space, x)
-        val top = TileLayoutHelper.blockTop(tileWidth, space, y)
-        val blockWidth = TileLayoutHelper.blockWidth(tileWidth, space, size)
-        val blockHeight = TileLayoutHelper.blockHeight(tileWidth, space, size)
-        return Rect(left, top, left + blockWidth, top + blockHeight)
     }
 
     private fun getTileSize(index: Int): TileSize {
@@ -241,6 +229,42 @@ class TileLayout(
         }
     }
 
+    private fun checkViewStatus(view: View) {
+        if (view is TileView<*>) {
+            if (isActive && view.visibility == View.VISIBLE) {
+                view.onResume()
+            } else {
+                view.onPause()
+            }
+        }
+    }
+
+    private fun getTileView(tile: Tile): TileView<*>? {
+        return tileCreator?.createTile(tile, context)?.apply {
+            bind(tile)
+        }
+    }
+
+    fun interface TileCreator {
+        fun createTile(tile: Tile, context: Context): TileView<*>
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        val context = context
+        if (context is BackPressedProvider) {
+            context.addBackPressedListener(this)
+        }
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        val context = context
+        if (context is BackPressedProvider) {
+            context.removeBackPressedListener(this)
+        }
+    }
+
     override fun addView(child: View?) {
         super.addView(child)
         if (child is TileView<*>) {
@@ -274,12 +298,14 @@ class TileLayout(
         val block = tileLayoutHelper.getBlock(index)
         block.size = tileList[index].size
         tileLayoutHelper.pushTile(block.x, block.y, block.size, index)
-        child.resizeTo(Rect(
-            block.left(tileWidth, space),
-            block.top(tileWidth, space),
-            block.right(tileWidth, space),
-            block.bottom(tileWidth, space)
-        ))
+        child.resizeTo(
+            Rect(
+                block.left(tileWidth, space),
+                block.top(tileWidth, space),
+                block.right(tileWidth, space),
+                block.bottom(tileWidth, space)
+            )
+        )
         moveIfViewChanged(oldSnapshot)
     }
 
@@ -296,8 +322,7 @@ class TileLayout(
     }
 
     private fun moveIfViewChanged(oldSnapshot: TileLayoutHelper.Snapshot) {
-        tileLayoutHelper.diff(oldSnapshot) {
-                i, block ->
+        tileLayoutHelper.diff(oldSnapshot) { i, block ->
             getChildAt(i)?.let {
                 if (it is TileView<*>) {
                     it.moveTo(
@@ -326,24 +351,16 @@ class TileLayout(
         )
     }
 
-    private fun checkViewStatus(view: View) {
-        if (view is TileView<*>) {
-            if (isActive && view.visibility == View.VISIBLE) {
-                view.onResume()
-            } else {
-                view.onPause()
-            }
-        }
+    override fun onFloating(child: TileView<*>) {
+        floatingChild?.sink()
+        floatingChild = child
     }
 
-    private fun getTileView(tile: Tile): TileView<*>? {
-        return tileCreator?.createTile(tile, context)?.apply {
-            bind(tile)
-        }
-    }
-
-    fun interface TileCreator {
-        fun createTile(tile: Tile, context: Context): TileView<*>
+    override fun onBackPressed(): Boolean {
+        val child = floatingChild?:return false
+        floatingChild = null
+        child.sink()
+        return true
     }
 
 }
