@@ -7,13 +7,17 @@ import android.view.ViewGroup
 import android.widget.TextView
 import com.lollipop.windowslauncher.theme.LColor
 import com.lollipop.windowslauncher.tile.Tile
+import com.lollipop.windowslauncher.tile.TileSize
 
 /**
  * @author lollipop
  * @date 2/15/21 16:40
  * 磁块展示的View
  */
-abstract class TileView<T : Tile>(context: Context) : ViewGroup(context), View.OnLongClickListener {
+abstract class TileView<T : Tile>(context: Context) :
+    ViewGroup(context),
+    View.OnLongClickListener,
+    View.OnClickListener {
 
     /**
      * 磁块的View辅助工具
@@ -28,12 +32,14 @@ abstract class TileView<T : Tile>(context: Context) : ViewGroup(context), View.O
 
     fun bindGroup(group: TileGroup) {
         this.tileGroup = group
-        setOnLongClickListener(this)
+//        setOnLongClickListener(this)
+        setOnClickListener(this)
     }
 
     fun unbindGroup() {
         this.tileGroup = null
         setOnLongClickListener(null)
+        setOnClickListener(null)
     }
 
     /**
@@ -125,6 +131,27 @@ abstract class TileView<T : Tile>(context: Context) : ViewGroup(context), View.O
         return false
     }
 
+    override fun onClick(v: View?) {
+        if (v == this) {
+            onClickTile()
+        }
+    }
+
+    open fun onClickTile() {
+        // TODO 测试代码
+        tileViewHelper.myTile?.let { tile ->
+            val oldSize = tile.size
+            if (tile.size == TileSize.S) {
+                tile.size = TileSize.XL
+            } else {
+                tile.size = TileSize.S
+            }
+            if (oldSize != tile.size) {
+                notifyTileSizeChange()
+            }
+        }
+    }
+
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         tileViewHelper.onAttached()
@@ -139,6 +166,10 @@ abstract class TileView<T : Tile>(context: Context) : ViewGroup(context), View.O
         tileViewHelper.onDetached()
     }
 
+    fun notifyTileSizeChange() {
+        tileGroup?.notifyTileSizeChange(this)
+    }
+
     fun notifyTileChange() {
         tileViewHelper.notifyTileChange()
     }
@@ -151,7 +182,7 @@ abstract class TileView<T : Tile>(context: Context) : ViewGroup(context), View.O
         translationZ = 0F
         rotationX = 0F
         rotationY = 0F
-
+        notifyTileChange()
         tileGroup?.requestLayoutMe(this)
     }
 

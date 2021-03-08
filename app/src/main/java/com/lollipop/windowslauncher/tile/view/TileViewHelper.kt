@@ -30,7 +30,8 @@ class TileViewHelper(private val tileView: TileView<*>) {
         AnimationTask(tileView, ANIMATION_DURATION_SHORT)
     }
 
-    private var myTile: Tile? = null
+    var myTile: Tile? = null
+        private set
 
     fun onResume() {
         tileAnimatorList.forEach {
@@ -49,9 +50,12 @@ class TileViewHelper(private val tileView: TileView<*>) {
     }
 
     fun moveTo(x: Int, y: Int, delay: Long, duration: Long = ANIMATION_DURATION_SHORT) {
-        moveAnimation.reset().duration(duration).moveX(end = x).moveY(end = y).delay(delay) {
-            tileView.callLayoutTile()
-        }
+        moveAnimation.reset()
+            .duration(duration)
+            .moveX(end = x)
+            .moveY(end = y)
+            .onEnd { tileView.callLayoutTile() }
+            .delay(delay)
     }
 
     fun resize(newSize: Rect, delay: Long, duration: Long = ANIMATION_DURATION_SHORT) {
@@ -67,9 +71,8 @@ class TileViewHelper(private val tileView: TileView<*>) {
             .scaleY(1F, scaleY)
             .translationX(oldTranslationX, oldTranslationX + translationX)
             .translationY(oldTranslationY, oldTranslationY + translationY)
-            .delay(delay) {
-                tileView.callLayoutTile()
-            }
+            .onEnd { tileView.callLayoutTile() }
+            .delay(delay)
     }
 
     fun float(delay: Long, duration: Long = ANIMATION_DURATION_SHORT) {
@@ -96,9 +99,8 @@ class TileViewHelper(private val tileView: TileView<*>) {
         moveAnimation.reset()
             .duration(duration)
             .alpha(end = alpha)
-            .delay(delay) {
-                tileView.callLayoutTile()
-            }
+            .onEnd { tileView.callLayoutTile() }
+            .delay(delay)
     }
 
     fun notifyTileChange() {
@@ -253,9 +255,13 @@ class TileViewHelper(private val tileView: TileView<*>) {
             animator.start()
         }
 
-        fun delay(delay: Long = 0, callback: (() -> Unit)? = null) {
-            runner.cancel()
+        fun onEnd(callback: () -> Unit): AnimationTask {
             this.onEndCallback = callback
+            return this
+        }
+
+        fun delay(delay: Long = 0) {
+            runner.cancel()
             runner.delay(delay)
         }
 

@@ -334,7 +334,7 @@ class TileLayoutHelper(
         return (tileWidth + space) * lowestLine.maxLine + space
     }
 
-    private fun removeEmptyLine() {
+    fun removeEmptyLine() {
         // 移除空行
         do {
             val index = checkerboard.findEmptyLine()

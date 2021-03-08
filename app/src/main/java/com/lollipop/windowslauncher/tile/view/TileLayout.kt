@@ -296,17 +296,31 @@ class TileLayout(
         }
         val oldSnapshot = tileLayoutHelper.getSnapshot()
         val block = tileLayoutHelper.getBlock(index)
-        block.size = tileList[index].size
-        tileLayoutHelper.pushTile(block.x, block.y, block.size, index)
-        child.resizeTo(
-            Rect(
-                block.left(tileWidth, space),
-                block.top(tileWidth, space),
-                block.right(tileWidth, space),
-                block.bottom(tileWidth, space)
+        val oldSize = block.size
+        val newSize = tileList[index].size
+        var isLayoutChange = false
+        if (oldSize.width < newSize.width || oldSize.height < newSize.height) {
+            tileLayoutHelper.removeEmptyLine()
+            val pushTile = tileLayoutHelper.pushTile(block.x, block.y, newSize, index)
+            if (!pushTile) {
+                block.resetLayout()
+                tileLayoutHelper.relayout()
+                isLayoutChange = true
+            }
+        }
+        if (!isLayoutChange) {
+            child.resizeTo(
+                Rect(
+                    block.left(tileWidth, space),
+                    block.top(tileWidth, space),
+                    block.right(tileWidth, space),
+                    block.bottom(tileWidth, space)
+                )
             )
-        )
-        moveIfViewChanged(oldSnapshot)
+            moveIfViewChanged(oldSnapshot)
+        } else {
+            requestLayout()
+        }
     }
 
     override fun notifyTileRemoved(child: TileView<*>) {
@@ -343,6 +357,10 @@ class TileLayout(
         val block = tileLayoutHelper.getBlock(index)
         val tileSpace = space
         val scroll = scrollHelper.scrollOffset * -1
+        child.measure(
+            MeasureSpec.makeMeasureSpec(block.width(tileWidth, space), MeasureSpec.EXACTLY),
+            MeasureSpec.makeMeasureSpec(block.height(tileWidth, space), MeasureSpec.EXACTLY),
+        )
         child.layout(
             block.left(tileWidth, tileSpace),
             block.top(tileWidth, tileSpace) + scroll,
