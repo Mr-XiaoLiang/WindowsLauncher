@@ -136,9 +136,15 @@ class TileLayout(
         }
     }
 
+    override fun onInterceptTouchEvent(ev: MotionEvent?): Boolean {
+        val superResult = super.onInterceptTouchEvent(ev)
+        return scrollHelper.onInterceptTouchEvent(ev) || superResult
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent?): Boolean {
-        return scrollHelper.onTouchEvent(event)
+        val superResult = super.onTouchEvent(event)
+        return scrollHelper.onTouchEvent(event) || superResult
     }
 
     override fun onOverScrolled(scrollX: Int, scrollY: Int, clampedX: Boolean, clampedY: Boolean) {
@@ -300,15 +306,18 @@ class TileLayout(
         val newSize = tileList[index].size
         var isLayoutChange = false
         if (oldSize.width < newSize.width || oldSize.height < newSize.height) {
-            tileLayoutHelper.removeEmptyLine()
             val pushTile = tileLayoutHelper.pushTile(block.x, block.y, newSize, index)
             if (!pushTile) {
-                block.resetLayout()
+                tileLayoutHelper.resetBlock(index, newSize)
                 tileLayoutHelper.relayout()
                 isLayoutChange = true
             }
+        } else {
+            tileLayoutHelper.syncBlockSize()
+            tileLayoutHelper.removeEmptyLine()
         }
         if (!isLayoutChange) {
+            block.size = newSize
             child.resizeTo(
                 Rect(
                     block.left(tileWidth, space),
@@ -343,6 +352,17 @@ class TileLayout(
                         block.left(tileWidth, space),
                         block.top(tileWidth, space)
                     )
+                }
+            }
+        }
+    }
+
+    private fun fixLayout(oldSnapshot: TileLayoutHelper.Snapshot) {
+        tileLayoutHelper.diff(oldSnapshot) { i, block ->
+            getChildAt(i)?.let {
+                if (it is TileView<*>) {
+                    it.offsetLeftAndRight(block.left(tileWidth, space) - it.left)
+                    it.offsetTopAndBottom(block.top(tileWidth, space) - it.top)
                 }
             }
         }

@@ -237,6 +237,11 @@ class AlphabetView(
         requestLayout()
     }
 
+    override fun onInterceptTouchEvent(ev: MotionEvent?): Boolean {
+        val superEvent = super.onInterceptTouchEvent(ev)
+        return scrollHelper.onInterceptTouchEvent(ev) || superEvent
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         val superEvent = super.onTouchEvent(event)

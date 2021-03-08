@@ -112,6 +112,13 @@ class TileLayoutHelper(
             return lowestLine.maxLine
         }
 
+    fun resetBlock(index: Int, size: TileSize? = null) {
+        blockList[index].resetLayout()
+        size?.let {
+            blockList[index].size = it
+        }
+    }
+
     fun relayout() {
         lowestLine.clear()
         checkerboard.clear()
@@ -228,7 +235,7 @@ class TileLayoutHelper(
      */
     fun getSnapshot(): Snapshot {
         val snapshot = Snapshot()
-        forEachBlock { _, block ->
+        blockList.forEach { block ->
             snapshot.add(block.x, block.y, !block.pendingRemove, block.size)
         }
         snapshot.lock()
@@ -334,11 +341,17 @@ class TileLayoutHelper(
         return (tileWidth + space) * lowestLine.maxLine + space
     }
 
-    fun removeEmptyLine() {
+    fun syncBlockSize(): Boolean {
+        return layoutFreeBlock()
+    }
+
+    fun removeEmptyLine(): Boolean {
         // 移除空行
+        var hasChanged = false
         do {
             val index = checkerboard.findEmptyLine()
             if (index >= 0) {
+                hasChanged = true
                 checkerboard.removeLine(index)
                 lowestLine.removeLine(index)
                 for (i in 0 until tileCount) {
@@ -349,20 +362,24 @@ class TileLayoutHelper(
                 }
             }
         } while (index >= 0)
+        return hasChanged
     }
 
-    private fun layoutFreeBlock() {
+    private fun layoutFreeBlock(): Boolean {
+        var hasChanged = false
         // 重组游离的块
         forEachBlock { _, block ->
             if (!block.hasLayout && block.active) {
                 val space = findSpace(block.size.width)
                 if (space.x >= 0 && space.y >= 0) {
+                    hasChanged = true
                     block.appoint(space)
                     checkerboard.put(block)
                     lowestLine.checkLast(block)
                 }
             }
         }
+        return hasChanged
     }
 
     private fun findSpace(span: Int): Point {

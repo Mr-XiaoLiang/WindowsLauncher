@@ -95,7 +95,43 @@ class ScrollHelper(
         }
     }
 
+    fun onInterceptTouchEvent(event: MotionEvent?): Boolean {
+        when (event?.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                activeTouchId = event.getPointerId(0)
+                lastTouchLocation.set(event.getActiveX(), event.getActiveY())
+                if (!scroller.isFinished) {
+                    scroller.abortAnimation()
+                    scroller.computeScrollOffset()
+                    touchMode = TouchMode.Scroll
+                }
+            }
+            MotionEvent.ACTION_MOVE -> {
+                if (touchMode.isScroll) {
+                    getVelocityTracker().addMovement(event)
+                }
+                onTouchMove(event.getActiveX(), event.getActiveY())
+            }
+            MotionEvent.ACTION_UP -> {
+                onTouchUp(event.getActiveX(), event.getActiveY())
+            }
+            MotionEvent.ACTION_CANCEL -> {
+                onTouchCancel(event.getActiveX(), event.getActiveY())
+            }
+            MotionEvent.ACTION_POINTER_UP -> {
+                checkActiveTouch(event) {
+                    lastTouchLocation.set(event.getActiveX(), event.getActiveY())
+                    getVelocityTracker().clear()
+                }
+            }
+        }
+        return touchMode == TouchMode.Scroll
+    }
+
     fun onTouchEvent(event: MotionEvent?): Boolean {
+        if (touchMode == TouchMode.Forgo) {
+            return false
+        }
         when (event?.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 activeTouchId = event.getPointerId(0)
@@ -174,10 +210,15 @@ class ScrollHelper(
     private fun onTouchMove(newX: Float, newY: Float) {
         val dy = (newY - lastTouchLocation.y + 0.5F).toInt()
         if (!touchMode.isScroll) {
-            if (abs(dy) > scrollTouchSlop) {
-                touchMode = TouchMode.Scroll
-                lastTouchLocation.set(newX, newY)
-                target.parent?.requestDisallowInterceptTouchEvent(true)
+            if (touchMode == TouchMode.None) {
+                val dx = (newX - lastTouchLocation.x + 0.5F).toInt()
+                if (abs(dy) > scrollTouchSlop) {
+                    touchMode = TouchMode.Scroll
+                    lastTouchLocation.set(newX, newY)
+                    target.parent?.requestDisallowInterceptTouchEvent(true)
+                } else if (abs(dx) > scrollTouchSlop) {
+                    touchMode = TouchMode.Forgo
+                }
             }
             return
         }
@@ -261,7 +302,8 @@ class ScrollHelper(
 
     private enum class TouchMode {
         None,
-        Scroll;
+        Scroll,
+        Forgo;
 
         val isScroll: Boolean
             get() {
