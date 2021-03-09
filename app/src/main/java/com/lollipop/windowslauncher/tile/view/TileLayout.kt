@@ -326,7 +326,7 @@ class TileLayout(
                     block.bottom(tileWidth, space)
                 )
             )
-            moveIfViewChanged(oldSnapshot)
+            moveIfViewChanged(oldSnapshot, index)
         } else {
             requestLayout()
         }
@@ -341,17 +341,19 @@ class TileLayout(
         val oldSnapshot = tileLayoutHelper.getSnapshot()
         tileLayoutHelper.notifyTileRemoved(intArrayOf(index))
         child.alpha(0F)
-        moveIfViewChanged(oldSnapshot)
+        moveIfViewChanged(oldSnapshot, index)
     }
 
-    private fun moveIfViewChanged(oldSnapshot: TileLayoutHelper.Snapshot) {
+    private fun moveIfViewChanged(oldSnapshot: TileLayoutHelper.Snapshot, skip: Int = -1) {
         tileLayoutHelper.diff(oldSnapshot) { i, block ->
-            getChildAt(i)?.let {
-                if (it is TileView<*>) {
-                    it.moveTo(
-                        block.left(tileWidth, space),
-                        block.top(tileWidth, space)
-                    )
+            if (skip != i) {
+                getChildAt(i)?.let {
+                    if (it is TileView<*>) {
+                        it.moveTo(
+                            block.left(tileWidth, space),
+                            block.top(tileWidth, space)
+                        )
+                    }
                 }
             }
         }
