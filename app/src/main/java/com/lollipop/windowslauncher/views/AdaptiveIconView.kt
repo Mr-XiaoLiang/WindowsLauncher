@@ -28,12 +28,14 @@ open class AdaptiveIconView(
 
     private val iconClipPath = Path()
 
-    var iconOutlineProvider: IconOutlineProvider? = null
+    var adaptiveIconOutlineProvider: IconOutlineProvider? = null
+
+    var defaultIconOutlineProvider: IconOutlineProvider? = null
 
     private var isAdaptiveIcon = false
 
-    constructor(context: Context, attr: AttributeSet?): this(context, attr, 0)
-    constructor(context: Context): this(context, null)
+    constructor(context: Context, attr: AttributeSet?) : this(context, attr, 0)
+    constructor(context: Context) : this(context, null)
 
     fun setIconWeight(adaptiveWeight: Float, defWeight: Float) {
         iconWeight = adaptiveWeight
@@ -50,7 +52,8 @@ open class AdaptiveIconView(
 
     private fun updateIconSize() {
         val weight = if (versionThen(Build.VERSION_CODES.O)
-            && drawable is AdaptiveIconDrawable) {
+            && drawable is AdaptiveIconDrawable
+        ) {
             isAdaptiveIcon = true
             iconWeight
         } else {
@@ -61,7 +64,11 @@ open class AdaptiveIconView(
         iconLeft = (width - iconWidth) / 2
         iconTop = (height - iconWidth) / 2
         iconClipPath.reset()
-        iconOutlineProvider?.getIconOutline(iconClipPath, iconLeft, iconTop, iconWidth)
+        if (isAdaptiveIcon) {
+            adaptiveIconOutlineProvider?.getIconOutline(iconClipPath, iconLeft, iconTop, iconWidth)
+        } else {
+            defaultIconOutlineProvider?.getIconOutline(iconClipPath, iconLeft, iconTop, iconWidth)
+        }
     }
 
     override fun onDraw(canvas: Canvas) {

@@ -93,9 +93,14 @@ class IconImageView(context: Context, attr: AttributeSet?, defStyle: Int) :
         setBackgroundColor(color)
     }
 
-    fun setOutline(outline: Outline) {
-        iconOutlineProvider = when (outline) {
+    fun setOutline(adaptiveOutline: Outline, defaultOutline: Outline) {
+        adaptiveIconOutlineProvider = when (adaptiveOutline) {
             Outline.Oval -> OvalIconOutline()
+            Outline.None -> null
+        }
+        defaultIconOutlineProvider = when (defaultOutline) {
+            Outline.Oval -> OvalIconOutline()
+            Outline.None -> null
         }
     }
 
@@ -108,7 +113,8 @@ class IconImageView(context: Context, attr: AttributeSet?, defStyle: Int) :
     }
 
     enum class Outline {
-        Oval
+        Oval,
+        None
     }
 
     private class OvalIconOutline : IconOutlineProvider {

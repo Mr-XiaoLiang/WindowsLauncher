@@ -21,7 +21,10 @@ class AppTileView(context: Context) : TileView<AppTile>(context) {
 
     init {
         viewBinding.appIcon.setIconWeight(0.8F, 0.5F)
-        viewBinding.appIcon.setOutline(IconImageView.Outline.Oval)
+        viewBinding.appIcon.setOutline(
+            IconImageView.Outline.None,
+            IconImageView.Outline.Oval
+        )
     }
 
     override fun onBind(tile: AppTile) {
