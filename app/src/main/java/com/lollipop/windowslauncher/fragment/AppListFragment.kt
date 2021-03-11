@@ -423,7 +423,7 @@ class AppListFragment : BaseFragment() {
                     true
                 }
             }
-            viewBinding.iconView.setOutline(IconImageView.Outline.Oval)
+            viewBinding.iconView.setOutline(IconImageView.Outline.None, IconImageView.Outline.Oval)
             viewBinding.iconView.setIconWeight(0.8F, 0.5F)
         }
 
