@@ -301,36 +301,36 @@ class TileLayout(
             return
         }
         // TODO 暂时未找到实现方案
-//        val oldSnapshot = tileLayoutHelper.getSnapshot()
-//        val block = tileLayoutHelper.getBlock(index)
-//        val oldSize = block.size
-//        val newSize = tileList[index].size
-//        var isLayoutChange = false
-//        if (oldSize.width < newSize.width || oldSize.height < newSize.height) {
-//            val pushTile = tileLayoutHelper.pushTile(block.x, block.y, newSize, index)
-//            if (!pushTile) {
-//                tileLayoutHelper.resetBlock(index, newSize)
-//                tileLayoutHelper.relayout()
-//                isLayoutChange = true
-//            }
-//        } else {
-//            tileLayoutHelper.syncBlockSize()
-//            tileLayoutHelper.removeEmptyLine()
-//        }
-//        if (!isLayoutChange) {
-//            block.size = newSize
-//            child.resizeTo(
-//                Rect(
-//                    block.left(tileWidth, space),
-//                    block.top(tileWidth, space),
-//                    block.right(tileWidth, space),
-//                    block.bottom(tileWidth, space)
-//                )
-//            )
-//            moveIfViewChanged(oldSnapshot, index)
-//        } else {
-//            requestLayout()
-//        }
+        val oldSnapshot = tileLayoutHelper.getSnapshot()
+        val block = tileLayoutHelper.getBlock(index)
+        val oldSize = block.size
+        val newSize = tileList[index].size
+        var isLayoutChange = false
+        if (oldSize.width < newSize.width || oldSize.height < newSize.height) {
+            val pushTile = tileLayoutHelper.pushTile(block.x, block.y, newSize, index)
+            if (!pushTile) {
+                tileLayoutHelper.resetBlock(index, newSize)
+                tileLayoutHelper.relayout()
+                isLayoutChange = true
+            }
+        } else {
+            tileLayoutHelper.syncBlockSize()
+            tileLayoutHelper.removeEmptyLine()
+        }
+        if (!isLayoutChange) {
+            block.size = newSize
+            child.resizeTo(
+                Rect(
+                    block.left(tileWidth, space),
+                    block.top(tileWidth, space),
+                    block.right(tileWidth, space),
+                    block.bottom(tileWidth, space)
+                )
+            )
+            moveIfViewChanged(oldSnapshot, index)
+        } else {
+            requestLayout()
+        }
     }
 
     override fun notifyTileRemoved(child: TileView<*>) {
