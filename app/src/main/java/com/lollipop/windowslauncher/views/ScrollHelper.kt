@@ -1,5 +1,6 @@
 package com.lollipop.windowslauncher.views
 
+import android.animation.ValueAnimator
 import android.graphics.PointF
 import android.view.*
 import android.widget.OverScroller
@@ -40,7 +41,11 @@ class ScrollHelper(
     private val target: ViewGroup,
     private val maxScrollOffsetProvider: () -> Int,
     private val minScrollOffsetProvider: () -> Int
-) {
+): ValueAnimator.AnimatorUpdateListener {
+
+    companion object {
+        private const val DEF_ANIMATION_DURATION = 300L
+    }
 
     val maxScrollOffset: Int
         get() {
@@ -65,6 +70,12 @@ class ScrollHelper(
 
     private var velocityTracker: VelocityTracker? = null
 
+    private val scrollAnimator by lazy {
+        ValueAnimator().apply {
+            addUpdateListener(this@ScrollHelper)
+        }
+    }
+
     /**
      * 滑动前的手指浮动区域
      */
@@ -81,6 +92,12 @@ class ScrollHelper(
     }
 
     private var touchMode = TouchMode.None
+        set(value) {
+            field = value
+            if (value.isScroll) {
+                scrollAnimator.cancel()
+            }
+        }
 
     private val childCount: Int
         get() {
@@ -178,6 +195,15 @@ class ScrollHelper(
 
     fun scrollTo(x: Int, y: Int) {
         onScrollChanged(0, y, 0, scrollOffset)
+    }
+
+    fun smoothScrollTo(x: Int, y: Int) {
+        scrollAnimator.cancel()
+        scrollAnimator.setIntValues(scrollOffset, y)
+        scrollAnimator.duration = (abs(scrollOffset - y) * 1F
+                / abs(maxScrollOffset - minScrollOffset)
+                * DEF_ANIMATION_DURATION).toLong()
+        scrollAnimator.start()
     }
 
     fun scrollBy(x: Int, y: Int) {
@@ -309,6 +335,12 @@ class ScrollHelper(
             get() {
                 return this == Scroll
             }
+    }
+
+    override fun onAnimationUpdate(animation: ValueAnimator?) {
+        if (animation == scrollAnimator) {
+            scrollTo(0, animation.animatedValue as Int)
+        }
     }
 
 }

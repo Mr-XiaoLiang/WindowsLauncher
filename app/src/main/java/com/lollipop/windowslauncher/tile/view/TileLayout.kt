@@ -341,7 +341,7 @@ class TileLayout(
             moveIfViewChanged(oldSnapshot, index)
         } else {
             layoutIfViewChanged(oldSnapshot)
-            scrollHelper.scrollTo(0, scrollHelper.maxScrollOffset)
+            scrollHelper.smoothScrollTo(0, scrollHelper.maxScrollOffset)
         }
         tileLayoutHelper.unlock()
         tileLayoutHelper.syncSize()
