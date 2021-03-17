@@ -328,7 +328,6 @@ class TileLayout(
             tileLayoutHelper.resetBlock(index, false, newSize)
             tileLayoutHelper.removeEmptyLine()
         }
-        val newSnapshot = tileLayoutHelper.getSnapshot()
         if (!isLayoutChange) {
             block.size = newSize
             child.resizeTo(
