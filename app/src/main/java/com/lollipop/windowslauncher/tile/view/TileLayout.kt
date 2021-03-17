@@ -304,7 +304,13 @@ class TileLayout(
             child.unbindGroup()
             return
         }
-        // TODO 暂时未找到实现方案
+        // 如果是浮动状态，那么需要把它清理掉
+        floatingChild?.sink(-1, -1)
+        if (child == floatingChild) {
+            floatingChild = null
+        } else {
+            sinkFocusChild()
+        }
         tileLayoutHelper.lock()
         val oldSnapshot = tileLayoutHelper.getSnapshot()
         val block = tileLayoutHelper.getBlock(index)
@@ -406,6 +412,10 @@ class TileLayout(
     }
 
     override fun onBackPressed(): Boolean {
+        return sinkFocusChild()
+    }
+
+    private fun sinkFocusChild(): Boolean {
         val child = floatingChild?:return false
         floatingChild = null
         child.sink()

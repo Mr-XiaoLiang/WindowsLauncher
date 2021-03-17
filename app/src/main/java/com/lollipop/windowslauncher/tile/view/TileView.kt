@@ -8,6 +8,7 @@ import android.widget.TextView
 import com.lollipop.windowslauncher.theme.LColor
 import com.lollipop.windowslauncher.tile.Tile
 import com.lollipop.windowslauncher.tile.TileSize
+import com.lollipop.windowslauncher.tile.view.TileViewHelper.Companion.ANIMATION_DURATION_SHORT
 import com.lollipop.windowslauncher.utils.log
 
 /**
@@ -33,7 +34,7 @@ abstract class TileView<T : Tile>(context: Context) :
 
     fun bindGroup(group: TileGroup) {
         this.tileGroup = group
-//        setOnLongClickListener(this)
+        setOnLongClickListener(this)
         setOnClickListener(this)
     }
 
@@ -91,37 +92,37 @@ abstract class TileView<T : Tile>(context: Context) :
     /**
      * 移动至
      */
-    open fun moveTo(x: Int, y: Int, delay: Long = 0) {
-        tileViewHelper.moveTo(x, y, delay)
+    open fun moveTo(x: Int, y: Int, delay: Long = 0, duration: Long = ANIMATION_DURATION_SHORT) {
+        tileViewHelper.moveTo(x, y, delay, duration)
     }
 
     /**
      * 重设大小
      */
-    open fun resizeTo(bounds: Rect, delay: Long = 0) {
-        tileViewHelper.resize(bounds, delay)
+    open fun resizeTo(bounds: Rect, delay: Long = 0, duration: Long = ANIMATION_DURATION_SHORT) {
+        tileViewHelper.resize(bounds, delay, duration)
     }
 
     /**
      * 浮起
      */
-    open fun float(delay: Long = 0) {
-        tileViewHelper.float(delay)
+    open fun float(delay: Long = 0, duration: Long = ANIMATION_DURATION_SHORT) {
+        tileViewHelper.float(delay, duration)
         tileGroup?.onFloating(this)
     }
 
     /**
      * 降下
      */
-    open fun sink(delay: Long = 0) {
-        tileViewHelper.sink(delay)
+    open fun sink(delay: Long = 0, duration: Long = ANIMATION_DURATION_SHORT) {
+        tileViewHelper.sink(delay, duration)
     }
 
     /**
      * 透明度变化
      */
-    open fun alpha(alpha: Float, delay: Long = 0) {
-        tileViewHelper.alpha(alpha, delay)
+    open fun alpha(alpha: Float, delay: Long = 0, duration: Long = ANIMATION_DURATION_SHORT) {
+        tileViewHelper.alpha(alpha, delay, duration)
     }
 
     override fun onLongClick(v: View?): Boolean {

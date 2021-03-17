@@ -250,6 +250,12 @@ class TileViewHelper(private val tileView: TileView<*>) {
 
         private fun start() {
             animator.cancel()
+            if (duration < 0L) {
+                onAnimationStart(animator)
+                execute(1F)
+                onAnimationEnd(animator)
+                return
+            }
             animator.duration = duration
             animator.setFloatValues(0F, 1F)
             animator.start()
@@ -262,6 +268,10 @@ class TileViewHelper(private val tileView: TileView<*>) {
 
         fun delay(delay: Long = 0) {
             runner.cancel()
+            if (delay < 0L) {
+                runner.run()
+                return
+            }
             runner.delay(delay)
         }
 
