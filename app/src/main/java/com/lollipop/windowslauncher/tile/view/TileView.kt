@@ -183,8 +183,8 @@ abstract class TileView<T : Tile>(context: Context) :
         translationZ = 0F
         rotationX = 0F
         rotationY = 0F
-        notifyTileChange()
         tileGroup?.requestLayoutMe(this)
+        notifyTileChange()
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {

@@ -404,7 +404,7 @@ class TileLayoutHelper(
                 checkerboard.removeLine(index)
                 lowestLine.removeLine(index)
                 for (i in 0 until tileCount) {
-                    val block = getBlock(i)
+                    val block = blockList[i]
                     if (block.y > index) {
                         block.offsetY(-1)
                     }
