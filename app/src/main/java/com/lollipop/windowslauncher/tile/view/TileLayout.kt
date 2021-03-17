@@ -120,6 +120,10 @@ class TileLayout(
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+        layoutChildren()
+    }
+
+    private fun layoutChildren() {
         val tileSpace = space
         tileWidth = TileLayoutHelper.tileWidth(width, spanCount, tileSpace)
         val scroll = scrollHelper.scrollOffset * -1
@@ -310,12 +314,12 @@ class TileLayout(
         if (oldSize.width < newSize.width || oldSize.height < newSize.height) {
             val pushTile = tileLayoutHelper.pushTile(block.x, block.y, newSize, index)
             if (!pushTile) {
-                tileLayoutHelper.resetBlock(index, newSize)
+                tileLayoutHelper.resetBlock(index, true, newSize)
                 tileLayoutHelper.relayout()
                 isLayoutChange = true
             }
         } else {
-            tileLayoutHelper.syncBlockSize()
+            tileLayoutHelper.resetBlock(index, false, newSize)
             tileLayoutHelper.removeEmptyLine()
         }
         val newSnapshot = tileLayoutHelper.getSnapshot()

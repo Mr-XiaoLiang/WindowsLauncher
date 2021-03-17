@@ -128,4 +128,15 @@ class Checkerboard {
         return builder.toString()
     }
 
+    fun clone(): Checkerboard {
+        val newBoard = Checkerboard()
+        newBoard.reset(this)
+        return newBoard
+    }
+
+    fun reset(board: Checkerboard) {
+        gridMap.clear()
+        gridMap.addAll(board.gridMap)
+    }
+
 }

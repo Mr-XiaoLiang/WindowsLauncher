@@ -3,6 +3,7 @@ package com.lollipop.windowslauncher.tile.view
 import android.graphics.Point
 import com.lollipop.windowslauncher.tile.TileSize
 import com.lollipop.windowslauncher.utils.Checkerboard
+import com.lollipop.windowslauncher.utils.log
 import org.json.JSONArray
 import org.json.JSONObject
 import java.lang.RuntimeException
@@ -131,10 +132,15 @@ class TileLayoutHelper(
         forEachBlock { _, _ ->  }
     }
 
-    fun resetBlock(index: Int, size: TileSize? = null) {
-        blockList[index].resetLayout()
+    fun resetBlock(index: Int, resetLayout: Boolean, size: TileSize? = null) {
+        if (resetLayout) {
+            blockList[index].resetLayout()
+        }
         size?.let {
-            blockList[index].size = it
+            val block = blockList[index]
+            checkerboard.remove(block)
+            block.size = it
+            checkerboard.put(block)
         }
     }
 
@@ -213,17 +219,31 @@ class TileLayoutHelper(
      */
     fun pushTile(x: Int, y: Int, size: TileSize, keepBlock: Int = -1): Boolean {
         // 如果已经可用，那么放弃操作
-        if (!checkerboard.contains(x, y, size.width, size.height)) {
+        if (keepBlock >= 0) {
+            // 保存一次棋盘格
+            val temp = checkerboard.clone()
+            // 移除需要跳过的棋盘格
+            checkerboard.remove(blockList[keepBlock])
+            // 检查移除被跳过的方块时，是否仍然放不下
+            val contains = checkerboard.contains(x, y, size.width, size.height)
+            // 重置棋盘格
+            checkerboard.reset(temp)
+            if (!contains) {
+                return true
+            }
+        } else if (!checkerboard.contains(x, y, size.width, size.height)) {
             return true
         }
         // 否则的话，进行块遍历，并且全部迁移
         var left = x
         var right = left + size.width - 1
-        val offsetY = size.height
+        var offsetY = size.height
         if (right > spanCount) {
             return false
         }
         val movedBlock = ArrayList<Block>()
+        var moved = false
+        log("pushTile - left = $left, right = $right")
         // 需要一行一行的处理，因为这是金字塔形状的干涉
         for (line in y..lowestLine.maxLine) {
             // 遍历寻找同一行的元素，进行偏移
@@ -233,6 +253,8 @@ class TileLayoutHelper(
                     && block.overlap(left, right)
                     && !movedBlock.contains(block)
                 ) {
+                    log("pushTile - line = $line, [${block.x}, ${block.y}]")
+                    moved = true
                     if (block.x < left) {
                         left = block.x
                     }
@@ -245,6 +267,13 @@ class TileLayoutHelper(
                     movedBlock.add(block)
                     checkerboard.put(block)
                 }
+            }
+            if (!moved && offsetY > 0) {
+                offsetY --
+                log("pushTile - emptyLine = $line")
+            }
+            if (offsetY == 0) {
+                break
             }
         }
         // 最后检查一次最低线条的位置
@@ -363,10 +392,6 @@ class TileLayoutHelper(
      */
     fun contentHeight(tileWidth: Int, space: Int): Int {
         return (tileWidth + space) * lowestLine.maxLine + space
-    }
-
-    fun syncBlockSize(): Boolean {
-        return layoutFreeBlock()
     }
 
     fun removeEmptyLine(): Boolean {
@@ -547,7 +572,7 @@ class TileLayoutHelper(
 
         val hasLayout: Boolean
             get() {
-                return x >= 0 || y >= 0
+                return x >= 0 && y >= 0
             }
 
         var pendingRemove = false
@@ -590,7 +615,7 @@ class TileLayoutHelper(
                 return false
             }
             val x1 = x
-            val x2 = x1 + size.width
+            val x2 = x1 + size.width - 1
             if (left <= x1 && right >= x2) {
                 return true
             }
