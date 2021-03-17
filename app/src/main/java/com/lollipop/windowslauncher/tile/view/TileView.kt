@@ -8,6 +8,7 @@ import android.widget.TextView
 import com.lollipop.windowslauncher.theme.LColor
 import com.lollipop.windowslauncher.tile.Tile
 import com.lollipop.windowslauncher.tile.TileSize
+import com.lollipop.windowslauncher.utils.log
 
 /**
  * @author lollipop

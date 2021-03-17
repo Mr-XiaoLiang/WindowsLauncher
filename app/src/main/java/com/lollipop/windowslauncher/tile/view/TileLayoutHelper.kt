@@ -3,6 +3,8 @@ package com.lollipop.windowslauncher.tile.view
 import android.graphics.Point
 import com.lollipop.windowslauncher.tile.TileSize
 import com.lollipop.windowslauncher.utils.Checkerboard
+import org.json.JSONArray
+import org.json.JSONObject
 import java.lang.RuntimeException
 
 /**
@@ -112,6 +114,23 @@ class TileLayoutHelper(
             return lowestLine.maxLine
         }
 
+    /**
+     * 是否自动同步块的尺寸
+     */
+    private var syncSize = true
+
+    fun lock() {
+        syncSize = false
+    }
+
+    fun unlock() {
+        syncSize = true
+    }
+
+    fun syncSize() {
+        forEachBlock { _, _ ->  }
+    }
+
     fun resetBlock(index: Int, size: TileSize? = null) {
         blockList[index].resetLayout()
         size?.let {
@@ -199,18 +218,21 @@ class TileLayoutHelper(
         }
         // 否则的话，进行块遍历，并且全部迁移
         var left = x
-        var right = x + size.width - 1
+        var right = left + size.width - 1
         val offsetY = size.height
         if (right > spanCount) {
             return false
         }
+        val movedBlock = ArrayList<Block>()
         // 需要一行一行的处理，因为这是金字塔形状的干涉
-        for (line in y .. lowestLine.maxLine) {
+        for (line in y..lowestLine.maxLine) {
             // 遍历寻找同一行的元素，进行偏移
-            forEachBlock{ index, block ->
+            forEachBlock { index, block ->
                 if (keepBlock != index
                     && block.y == line
-                    && block.overlap(left, right)) {
+                    && block.overlap(left, right)
+                    && !movedBlock.contains(block)
+                ) {
                     if (block.x < left) {
                         left = block.x
                     }
@@ -220,6 +242,7 @@ class TileLayoutHelper(
                     // 移动时不能忘了棋盘格，并且这时候不方便做移动，因此采取先移除再加入的方式
                     checkerboard.remove(block)
                     block.offsetY(offsetY)
+                    movedBlock.add(block)
                     checkerboard.put(block)
                 }
             }
@@ -235,7 +258,7 @@ class TileLayoutHelper(
      */
     fun getSnapshot(): Snapshot {
         val snapshot = Snapshot()
-        blockList.forEach { block ->
+        forEachBlock { _, block ->
             snapshot.add(block.x, block.y, !block.pendingRemove, block.size)
         }
         snapshot.lock()
@@ -247,7 +270,8 @@ class TileLayoutHelper(
      * 并且通过回调函数传递出去
      * 目的在于方便UI进行更新同步（只变更变化的部分）
      */
-    fun diff(snapshot: Snapshot,
+    fun diff(
+        snapshot: Snapshot,
         run: (index: Int, block: Block) -> Unit
     ) {
         forEachBlock { index, block ->
@@ -256,7 +280,7 @@ class TileLayoutHelper(
                 val readY = snapshot.readY(index)
                 val readSize = snapshot.readSize(index)
                 if (readX != block.x || readY != block.y || readSize != block.size) {
-                    run(index,block)
+                    run(index, block)
                 }
             }
         }
@@ -442,7 +466,9 @@ class TileLayoutHelper(
             blockList.add(Block())
         }
         for (i in 0 until tileCount) {
-            blockList[i].size = sizeProvider(i)
+            if (syncSize) {
+                blockList[i].size = sizeProvider(i)
+            }
             run(i, blockList[i])
         }
     }
@@ -626,7 +652,11 @@ class TileLayoutHelper(
             if (isLock) {
                 return
             }
-            val activeFlag = if (active) { 1 } else { 0 }
+            val activeFlag = if (active) {
+                1
+            } else {
+                0
+            }
             locationList.add(intArrayOf(x, y, activeFlag, size.ordinal))
         }
 
@@ -654,6 +684,19 @@ class TileLayoutHelper(
             get() {
                 return locationList.size
             }
+
+        override fun toString(): String {
+            val jsonArray = JSONArray()
+            locationList.forEach {
+                jsonArray.put(JSONObject().apply {
+                    put("x", it[0])
+                    put("y", it[1])
+                    put("active", it[2])
+                    put("size", it[3])
+                })
+            }
+            return jsonArray.toString()
+        }
 
     }
 

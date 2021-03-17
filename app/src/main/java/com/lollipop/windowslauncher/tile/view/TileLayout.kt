@@ -301,6 +301,7 @@ class TileLayout(
             return
         }
         // TODO 暂时未找到实现方案
+        tileLayoutHelper.lock()
         val oldSnapshot = tileLayoutHelper.getSnapshot()
         val block = tileLayoutHelper.getBlock(index)
         val oldSize = block.size
@@ -317,6 +318,7 @@ class TileLayout(
             tileLayoutHelper.syncBlockSize()
             tileLayoutHelper.removeEmptyLine()
         }
+        val newSnapshot = tileLayoutHelper.getSnapshot()
         if (!isLayoutChange) {
             block.size = newSize
             child.resizeTo(
@@ -331,6 +333,8 @@ class TileLayout(
         } else {
             requestLayout()
         }
+        tileLayoutHelper.unlock()
+        tileLayoutHelper.syncSize()
     }
 
     override fun notifyTileRemoved(child: TileView<*>) {
