@@ -340,7 +340,8 @@ class TileLayout(
             )
             moveIfViewChanged(oldSnapshot, index)
         } else {
-            requestLayout()
+            layoutIfViewChanged(oldSnapshot)
+            scrollHelper.scrollTo(0, scrollHelper.maxScrollOffset)
         }
         tileLayoutHelper.unlock()
         tileLayoutHelper.syncSize()
@@ -368,6 +369,34 @@ class TileLayout(
                             block.top(tileWidth, space)
                         )
                     }
+                }
+            }
+        }
+    }
+
+    private fun layoutIfViewChanged(oldSnapshot: TileLayoutHelper.Snapshot, skip: Int = -1) {
+        val tileSpace = space
+        val scroll = scrollHelper.scrollOffset * -1
+        tileLayoutHelper.diff(oldSnapshot) { i, block ->
+            if (skip != i) {
+                getChildAt(i)?.let { child ->
+                    if (child is TileView<*>) {
+                        child.notifyTileChange()
+                    }
+                    child.measure(
+                        MeasureSpec.makeMeasureSpec(
+                            block.width(tileWidth, tileSpace), MeasureSpec.EXACTLY
+                        ),
+                        MeasureSpec.makeMeasureSpec(
+                            block.height(tileWidth, tileSpace), MeasureSpec.EXACTLY
+                        )
+                    )
+                    child.layout(
+                        block.left(tileWidth, tileSpace),
+                        block.top(tileWidth, tileSpace) + scroll,
+                        block.right(tileWidth, tileSpace),
+                        block.bottom(tileWidth, tileSpace) + scroll,
+                    )
                 }
             }
         }

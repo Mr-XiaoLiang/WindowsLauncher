@@ -42,12 +42,12 @@ class ScrollHelper(
     private val minScrollOffsetProvider: () -> Int
 ) {
 
-    private val maxScrollOffset: Int
+    val maxScrollOffset: Int
         get() {
             return maxScrollOffsetProvider()
         }
 
-    private val minScrollOffset: Int
+    val minScrollOffset: Int
         get() {
             return minScrollOffsetProvider()
         }
