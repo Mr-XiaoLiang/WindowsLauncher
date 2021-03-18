@@ -199,6 +199,10 @@ class TileLayout(
         this.tileCreator = creator
     }
 
+    fun startDrag(index: Int) {
+        // TODO
+    }
+
     private fun addTileView(tile: Tile) {
         val view = getTileView(tile) ?: return
         tileList.add(tile)
