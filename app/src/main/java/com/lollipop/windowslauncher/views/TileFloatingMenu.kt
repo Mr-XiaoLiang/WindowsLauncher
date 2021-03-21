@@ -10,11 +10,21 @@ import com.lollipop.windowslauncher.tile.TileSize
  */
 class TileFloatingMenu private constructor(private val option: Option) {
 
+    companion object {
+        fun listMenu(): Builder {
+            return Builder(Style.List)
+        }
+
+        fun blockMenu(): Builder {
+            return Builder(Style.Block)
+        }
+    }
+
     private fun show() {
         // todo
     }
 
-    class Builder(val style: Style) {
+    class Builder (val style: Style) {
         private val resizeList = ArrayList<TileSize>()
         private val buttonList = ArrayList<ButtonInfo>()
         private var clickListener: ((id: Int) -> Unit)? = null
