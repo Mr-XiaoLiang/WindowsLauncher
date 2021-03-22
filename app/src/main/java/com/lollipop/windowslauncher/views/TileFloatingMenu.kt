@@ -1,6 +1,8 @@
 package com.lollipop.windowslauncher.views
 
+import android.content.Context
 import android.view.View
+import android.widget.FrameLayout
 import com.lollipop.windowslauncher.tile.TileSize
 
 /**
@@ -20,8 +22,21 @@ class TileFloatingMenu private constructor(private val option: Option) {
         }
     }
 
+    private val rootGroup: View by lazy {
+        AnchorLayoutGroup(option.anchor)
+    }
+
     private fun show() {
         // todo
+    }
+
+
+    private class AnchorLayoutGroup(
+        val anchor: View
+    ): FrameLayout(anchor.context) {
+
+
+
     }
 
     class Builder (val style: Style) {
