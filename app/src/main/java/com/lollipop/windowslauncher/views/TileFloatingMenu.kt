@@ -4,6 +4,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.core.view.ViewCompat
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.lollipop.windowslauncher.tile.TileSize
 import kotlin.math.min
@@ -16,19 +17,10 @@ import kotlin.math.min
 class TileFloatingMenu private constructor(private val option: Option) {
 
     companion object {
-        /**
-         * 纵向列表的菜单
-         */
-        fun listMenu(): Builder {
-            return Builder(Style.List)
+        fun create(): Builder {
+            return Builder()
         }
 
-        /**
-         * 横向方块的菜单
-         */
-        fun blockMenu(): Builder {
-            return Builder(Style.Block)
-        }
     }
 
     /**
@@ -55,6 +47,20 @@ class TileFloatingMenu private constructor(private val option: Option) {
         // todo
     }
 
+
+    private fun initListView() {
+
+    }
+
+//    private class ButtonAdapter(option: Option): RecyclerView.Adapter<>
+
+    private class BlockHolder(view: View): RecyclerView.ViewHolder(view) {
+
+    }
+
+    private class ListHolder(view: View): RecyclerView.ViewHolder(view) {
+
+    }
 
     private class AnchorLayoutGroup(
         val anchor: View
@@ -107,7 +113,7 @@ class TileFloatingMenu private constructor(private val option: Option) {
 
     }
 
-    class Builder(val style: Style) {
+    class Builder {
         private val resizeList = ArrayList<TileSize>()
         private val buttonList = ArrayList<ButtonInfo>()
         private var clickListener: ((id: Int) -> Unit)? = null
@@ -135,7 +141,6 @@ class TileFloatingMenu private constructor(private val option: Option) {
         fun showIn(anchor: View): TileFloatingMenu {
             return TileFloatingMenu(
                 Option(
-                    style = style,
                     anchor = anchor,
                     resizeList = resizeList.toTypedArray(),
                     buttonList = buttonList.toTypedArray(),
@@ -149,7 +154,6 @@ class TileFloatingMenu private constructor(private val option: Option) {
     }
 
     private class Option(
-        val style: Style,
         val anchor: View,
         val resizeList: Array<TileSize>,
         val buttonList: Array<ButtonInfo>,
@@ -160,9 +164,5 @@ class TileFloatingMenu private constructor(private val option: Option) {
         val name: Int,
         val id: Int
     )
-
-    enum class Style {
-        Block, List
-    }
 
 }
