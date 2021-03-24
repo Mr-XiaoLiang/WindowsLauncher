@@ -4,6 +4,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import androidx.annotation.StringRes
 import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -59,9 +60,8 @@ class TileFloatingMenu private constructor(private val option: Option) {
         if (option.resizeList.isEmpty() && option.buttonList.isEmpty()) {
             return
         }
-        // todo
+        // TODO
     }
-
 
     private fun initListView() {
 
@@ -69,11 +69,11 @@ class TileFloatingMenu private constructor(private val option: Option) {
 
 //    private class ButtonAdapter(option: Option): RecyclerView.Adapter<>
 
-    private class BlockHolder(view: View) : RecyclerView.ViewHolder(view) {
+    private class ResizeButtonHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     }
 
-    private class ListHolder(view: View) : RecyclerView.ViewHolder(view) {
+    private class MenuButtonHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     }
 
@@ -117,7 +117,8 @@ class TileFloatingMenu private constructor(private val option: Option) {
                             childLeft,
                             childTop,
                             childLeft + childHeight,
-                            childTop + childHeight)
+                            childTop + childHeight
+                        )
                     }
                 }
             }
@@ -149,7 +150,8 @@ class TileFloatingMenu private constructor(private val option: Option) {
     class Builder {
         private val resizeList = ArrayList<TileSize>()
         private val buttonList = ArrayList<ButtonInfo>()
-        private var clickListener: ((id: Int) -> Unit)? = null
+        private var menuClickListener: OnMenuClickListener? = null
+        private var resizeClickListener: OnResizeClickListener? = null
 
         fun addResizeType(size: TileSize): Builder {
             if (!resizeList.contains(size)) {
@@ -166,8 +168,13 @@ class TileFloatingMenu private constructor(private val option: Option) {
             return this
         }
 
-        fun onClick(listener: (id: Int) -> Unit): Builder {
-            clickListener = listener
+        fun onClick(listener: OnMenuClickListener): Builder {
+            menuClickListener = listener
+            return this
+        }
+
+        fun onResize(listener: OnResizeClickListener): Builder {
+            resizeClickListener = listener
             return this
         }
 
@@ -177,7 +184,8 @@ class TileFloatingMenu private constructor(private val option: Option) {
                     anchor = anchor,
                     resizeList = resizeList.toTypedArray(),
                     buttonList = buttonList.toTypedArray(),
-                    onClickListener = clickListener ?: {}
+                    onMenuClickListener = menuClickListener ?: OnMenuClickListener {},
+                    onResizeClickListener = resizeClickListener ?: OnResizeClickListener {}
                 )
             ).apply {
                 show()
@@ -186,20 +194,93 @@ class TileFloatingMenu private constructor(private val option: Option) {
 
     }
 
+    /**
+     * 参数配置信息
+     * 它是不可变的
+     */
     private class Option(
+        /**
+         * 菜单关联的锚点
+         */
         val anchor: View,
+
+        /**
+         * 重置大小的按钮列表
+         */
         val resizeList: Array<TileSize>,
+
+        /**
+         * 菜单按钮列表
+         */
         val buttonList: Array<ButtonInfo>,
-        val onClickListener: (Int) -> Unit,
+
+        /**
+         * 普通菜单按钮点击事件的监听器
+         */
+        val onMenuClickListener: OnMenuClickListener,
+
+        /**
+         * 尺寸重置按钮点击的监听器
+         */
+        val onResizeClickListener: OnResizeClickListener
     )
 
+    /**
+     * 按钮当描述信息
+     */
     private class ButtonInfo(
+        /**
+         * 按钮名称
+         */
+        @StringRes
         val name: Int,
+
+        /**
+         * 按钮的ID
+         */
         val id: Int
     )
 
+    /**
+     * 动画类型
+     */
     private enum class AnimationStyle {
-        Expansion, Sheet
+
+        /**
+         * 展开模式
+         * 当高度允许的时候，在锚点附近展开
+         */
+        Expansion,
+
+        /**
+         * 底部抽屉模式
+         * 当锚点附近无法完整展开菜单时
+         * 在底部放置菜单布局
+         */
+        Sheet
+    }
+
+    /**
+     * 菜单被点击时的监听器
+     */
+    fun interface OnMenuClickListener {
+        /**
+         * 当菜单被点击时
+         * @param id 被点击按钮的对应id
+         */
+        fun onMenuClick(id: Int)
+    }
+
+    /**
+     * 尺寸重置按钮被点击时的监听器
+     */
+    fun interface OnResizeClickListener {
+
+        /**
+         * 尺寸重置按钮被点击时
+         * @param newSize 被点击的尺寸信息
+         */
+        fun onResizeClick(newSize: TileSize)
     }
 
 }
