@@ -3,10 +3,14 @@ package com.lollipop.windowslauncher.views
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.LinearLayout
 import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.lollipop.windowslauncher.databinding.MenuTileFloatingBinding
 import com.lollipop.windowslauncher.tile.TileSize
+import com.lollipop.windowslauncher.utils.dp2px
+import com.lollipop.windowslauncher.utils.withThis
 import kotlin.math.min
 
 /**
@@ -20,7 +24,6 @@ class TileFloatingMenu private constructor(private val option: Option) {
         fun create(): Builder {
             return Builder()
         }
-
     }
 
     /**
@@ -31,19 +34,31 @@ class TileFloatingMenu private constructor(private val option: Option) {
     }
 
     /**
-     * 列表的View
+     * 气泡窗口的ViewBinding
      */
-    private val listView: RecyclerView by lazy {
-        RecyclerView(option.anchor.context).apply {
-            rootGroup.addView(
-                this,
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
+    private val popupView: MenuTileFloatingBinding by rootGroup.withThis(true)
+
+    /**
+     * 重设尺寸的按钮列表
+     */
+    private val resizeButtonList: RecyclerView
+        get() {
+            return popupView.resizeButtonList
         }
-    }
+
+    /**
+     * 菜单按钮的列表
+     */
+    private val menuButtonList: RecyclerView
+        get() {
+            return popupView.menuButtonList
+        }
 
     private fun show() {
+        // 都是空的就不显示了
+        if (option.resizeList.isEmpty() && option.buttonList.isEmpty()) {
+            return
+        }
         // todo
     }
 
@@ -54,11 +69,11 @@ class TileFloatingMenu private constructor(private val option: Option) {
 
 //    private class ButtonAdapter(option: Option): RecyclerView.Adapter<>
 
-    private class BlockHolder(view: View): RecyclerView.ViewHolder(view) {
+    private class BlockHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     }
 
-    private class ListHolder(view: View): RecyclerView.ViewHolder(view) {
+    private class ListHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     }
 
@@ -66,25 +81,43 @@ class TileFloatingMenu private constructor(private val option: Option) {
         val anchor: View
     ) : FrameLayout(anchor.context) {
 
+        private val childAnimationStyles = ArrayList<AnimationStyle>()
+
         override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-            super.onLayout(changed, left, top, right, bottom)
+            childAnimationStyles.clear()
             getLayoutOffset { isTop, maxHeight, baseLine ->
+                val groupHeight = height
+                val groupWidth = width
                 for (index in 0 until childCount) {
                     getChildAt(index)?.let { child ->
-                        val childHeight = min(maxHeight, child.measuredHeight)
-                        if (childHeight != child.measuredHeight) {
-                            // 如果尺寸不一致，那么再测量一次
-                            child.measure(
-                                MeasureSpec.makeMeasureSpec(child.width, MeasureSpec.EXACTLY),
-                                MeasureSpec.makeMeasureSpec(childHeight, MeasureSpec.EXACTLY),
-                            )
-                        }
-                        val offsetY = if (isTop) {
-                            baseLine - childHeight - child.top
+                        val childHeight = child.measuredHeight
+                        val childWidth = child.measuredWidth
+                        val animationStyle = if (childHeight > maxHeight) {
+                            AnimationStyle.Sheet
                         } else {
-                            baseLine - child.top
+                            AnimationStyle.Expansion
                         }
-                        ViewCompat.offsetTopAndBottom(child, offsetY)
+                        childAnimationStyles.add(animationStyle)
+
+                        val childTop = when (animationStyle) {
+                            AnimationStyle.Expansion -> {
+                                if (isTop) {
+                                    baseLine - childHeight
+                                } else {
+                                    baseLine
+                                }
+                            }
+                            AnimationStyle.Sheet -> {
+                                groupHeight - childHeight
+                            }
+                        }
+                        val childLeft = (groupWidth - childWidth) / 2
+
+                        child.layout(
+                            childLeft,
+                            childTop,
+                            childLeft + childHeight,
+                            childTop + childHeight)
                     }
                 }
             }
@@ -164,5 +197,9 @@ class TileFloatingMenu private constructor(private val option: Option) {
         val name: Int,
         val id: Int
     )
+
+    private enum class AnimationStyle {
+        Expansion, Sheet
+    }
 
 }
