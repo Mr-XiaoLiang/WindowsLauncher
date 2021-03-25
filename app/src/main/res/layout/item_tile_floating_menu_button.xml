@@ -6,5 +6,6 @@
     android:textSize="20sp"
     android:text="@string/app_name"
     android:paddingHorizontal="20dp"
-    android:paddingVertical="16dp"/>
+    android:paddingVertical="16dp"
+    android:id="@+id/buttonName"/>
 

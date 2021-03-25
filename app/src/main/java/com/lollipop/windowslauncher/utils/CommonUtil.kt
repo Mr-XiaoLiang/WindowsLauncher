@@ -14,6 +14,10 @@ import android.view.*
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
+import android.widget.FrameLayout
+import android.widget.RelativeLayout
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.viewbinding.ViewBinding
@@ -628,4 +632,31 @@ fun Int.biggerThen(o: Int): Int {
 
 fun versionThen(target: Int): Boolean {
     return Build.VERSION.SDK_INT >= target
+}
+
+fun View.findRootGroup(filter: (ViewGroup) -> Boolean): ViewGroup? {
+    var parent: ViewParent?
+    var view: View? = this
+    var group: ViewGroup? = null
+    do {
+        parent = view?.parent
+        if (parent is ViewGroup && filter(parent)) {
+            group = parent
+        }
+        view = if (parent is View) {
+            parent
+        } else {
+            null
+        }
+    } while (parent != null)
+    return group
+}
+
+fun View.findDialogGroup(): ViewGroup? {
+    return findRootGroup {
+        it is FrameLayout ||
+                it is ConstraintLayout ||
+                it is CoordinatorLayout ||
+                it is RelativeLayout
+    }
 }

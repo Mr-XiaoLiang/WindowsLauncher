@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">WindowsLauncher</string>
+
+    <string name="tile_size_s">小</string>
+    <string name="tile_size_m">大</string>
+    <string name="tile_size_l">宽</string>
+    <string name="tile_size_xl">超大</string>
 </resources>

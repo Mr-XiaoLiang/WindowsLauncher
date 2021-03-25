@@ -1,5 +1,7 @@
 package com.lollipop.windowslauncher.views
 
+import android.graphics.*
+import android.graphics.drawable.Drawable
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -8,10 +10,13 @@ import androidx.annotation.StringRes
 import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.lollipop.windowslauncher.databinding.ItemTileFloatingMenuButtonBinding
+import com.lollipop.windowslauncher.databinding.ItemTileFloatingMenuResizeBinding
 import com.lollipop.windowslauncher.databinding.MenuTileFloatingBinding
+import com.lollipop.windowslauncher.theme.LColor
+import com.lollipop.windowslauncher.tile.Tile
 import com.lollipop.windowslauncher.tile.TileSize
-import com.lollipop.windowslauncher.utils.dp2px
-import com.lollipop.windowslauncher.utils.withThis
+import com.lollipop.windowslauncher.utils.*
 import kotlin.math.min
 
 /**
@@ -60,21 +65,201 @@ class TileFloatingMenu private constructor(private val option: Option) {
         if (option.resizeList.isEmpty() && option.buttonList.isEmpty()) {
             return
         }
+        // 先隐藏
+        popupView.popBody.visibleOrInvisible(false)
+        // 准备列表
+        initListView()
+        // 将根结点添加到屏幕
+        val dialogGroup = option.anchor.findDialogGroup() ?: return
+        dialogGroup.addView(
+            rootGroup,
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT)
+        rootGroup.post {
+            doAnimation()
+        }
+    }
+
+    private fun doAnimation() {
         // TODO
     }
 
     private fun initListView() {
+        resizeButtonList.visibleOrGone(option.resizeList.isNotEmpty()) {
+            layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false)
+            adapter = ResizeButtonAdapter(option.resizeList, ::onResizeClick)
+        }
+        menuButtonList.visibleOrGone(option.buttonList.isNotEmpty()) {
+            layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
+            adapter = MenuButtonAdapter(option.buttonList, ::onMenuClick)
+        }
+    }
+
+    private fun onResizeClick(tileSize: TileSize) {
+        option.onResizeClickListener.onResizeClick(tileSize)
+    }
+
+    private fun onMenuClick(buttonInfo: ButtonInfo) {
+        option.onMenuClickListener.onMenuClick(buttonInfo.id)
+    }
+
+    private class ResizeButtonAdapter(
+        private val buttonList: Array<TileSize>,
+        private val onItemClick: (TileSize) -> Unit
+    ): RecyclerView.Adapter<ResizeButtonHolder>() {
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ResizeButtonHolder {
+            return ResizeButtonHolder.create(parent, ::onHolderClick)
+        }
+
+        override fun onBindViewHolder(holder: ResizeButtonHolder, position: Int) {
+            holder.bind(buttonList[position])
+        }
+
+        override fun getItemCount(): Int {
+            return buttonList.size
+        }
+
+        private fun onHolderClick(holder: ResizeButtonHolder) {
+            onItemClick(buttonList[holder.adapterPosition])
+        }
 
     }
 
-//    private class ButtonAdapter(option: Option): RecyclerView.Adapter<>
+    private class MenuButtonAdapter(
+        private val buttonList: Array<ButtonInfo>,
+        private val onItemClick: (ButtonInfo) -> Unit
+    ): RecyclerView.Adapter<MenuButtonHolder>() {
 
-    private class ResizeButtonHolder(view: View) : RecyclerView.ViewHolder(view) {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MenuButtonHolder {
+            return MenuButtonHolder.create(parent, ::onHolderClick)
+        }
+
+        override fun onBindViewHolder(holder: MenuButtonHolder, position: Int) {
+            holder.bind(buttonList[position].name)
+        }
+
+        override fun getItemCount(): Int {
+            return buttonList.size
+        }
+
+        private fun onHolderClick(holder: MenuButtonHolder) {
+            onItemClick(buttonList[holder.adapterPosition])
+        }
 
     }
 
-    private class MenuButtonHolder(view: View) : RecyclerView.ViewHolder(view) {
+    private class ResizeButtonHolder private constructor(
+        private val viewBinding: ItemTileFloatingMenuResizeBinding,
+        private val onClickListener: (ResizeButtonHolder) -> Unit
+    ) : RecyclerView.ViewHolder(viewBinding.root) {
 
+        companion object {
+            fun create(
+                parent: ViewGroup,
+                onClickListener: (ResizeButtonHolder) -> Unit
+            ): ResizeButtonHolder {
+                return ResizeButtonHolder(parent.bind(), onClickListener)
+            }
+        }
+
+        private val tilePreviewDrawable = TilePreviewDrawable()
+
+        init {
+            itemView.setOnClickListener {
+                onClickListener.invoke(this)
+            }
+            viewBinding.resizePreviewView.setImageDrawable(tilePreviewDrawable)
+        }
+
+        fun bind(tileSize: TileSize) {
+            tilePreviewDrawable.color = LColor.primary
+            tilePreviewDrawable.tileSize = tileSize
+            viewBinding.resizeNameView.setText(tileSize.nameId)
+        }
+
+    }
+
+    private class MenuButtonHolder private constructor(
+        private val viewBinding: ItemTileFloatingMenuButtonBinding,
+        private val onClickListener: (MenuButtonHolder) -> Unit
+    ) : RecyclerView.ViewHolder(viewBinding.root) {
+
+        companion object {
+            fun create(
+                parent: ViewGroup,
+                onClickListener: (MenuButtonHolder) -> Unit
+            ): MenuButtonHolder {
+                return MenuButtonHolder(parent.bind(), onClickListener)
+            }
+        }
+
+        init {
+            itemView.setOnClickListener {
+                onClickListener.invoke(this)
+            }
+        }
+
+        fun bind(name: Int) {
+            viewBinding.buttonName.setText(name)
+        }
+
+    }
+
+    private class TilePreviewDrawable : Drawable() {
+
+        var tileSize: TileSize = TileSize.S
+            set(value) {
+                field = value
+                resetTileBounds()
+            }
+
+        var color: Int = Color.BLACK
+
+        private val tileBounds = Rect()
+
+        private val paint = Paint().apply {
+            isAntiAlias = true
+        }
+
+        override fun draw(canvas: Canvas) {
+            paint.color = color.alpha(0.3F)
+            canvas.drawRect(bounds, paint)
+            paint.color = color
+            canvas.drawRect(tileBounds, paint)
+        }
+
+        override fun onBoundsChange(bounds: Rect?) {
+            super.onBoundsChange(bounds)
+            resetTileBounds()
+        }
+
+        private fun resetTileBounds() {
+            val height = tileSize.height
+            val width = tileSize.width
+            val maxHeight = TileSize.XL.height
+            val maxWidth = TileSize.XL.width
+            tileBounds.set(
+                0,
+                0,
+                bounds.width() * width / maxWidth,
+                bounds.height() * height / maxHeight
+            )
+            tileBounds.offset(bounds.left, bounds.top)
+            invalidateSelf()
+        }
+
+        override fun setAlpha(alpha: Int) {
+            paint.alpha = alpha
+        }
+
+        override fun setColorFilter(colorFilter: ColorFilter?) {
+            paint.colorFilter = colorFilter
+        }
+
+        override fun getOpacity(): Int {
+            return PixelFormat.TRANSPARENT
+        }
     }
 
     private class AnchorLayoutGroup(
