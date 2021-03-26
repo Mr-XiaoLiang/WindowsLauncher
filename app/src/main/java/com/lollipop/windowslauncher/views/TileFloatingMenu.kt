@@ -1,9 +1,12 @@
 package com.lollipop.windowslauncher.views
 
+import android.animation.Animator
+import android.animation.ValueAnimator
 import android.graphics.*
 import android.graphics.drawable.Drawable
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewManager
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import androidx.annotation.StringRes
@@ -17,6 +20,7 @@ import com.lollipop.windowslauncher.theme.LColor
 import com.lollipop.windowslauncher.tile.Tile
 import com.lollipop.windowslauncher.tile.TileSize
 import com.lollipop.windowslauncher.utils.*
+import kotlin.math.abs
 import kotlin.math.min
 
 /**
@@ -24,9 +28,18 @@ import kotlin.math.min
  * @date 3/19/21 22:43
  * 瓷砖的悬浮菜单
  */
-class TileFloatingMenu private constructor(private val option: Option) {
+class TileFloatingMenu private constructor(
+    private val option: Option
+) : ValueAnimator.AnimatorUpdateListener, Animator.AnimatorListener {
 
     companion object {
+
+        private const val START_PROGRESS = 0F
+
+        private const val END_PROGRESS = 1F
+
+        private const val DURATION = 300L
+
         fun create(): Builder {
             return Builder()
         }
@@ -60,7 +73,22 @@ class TileFloatingMenu private constructor(private val option: Option) {
             return popupView.menuButtonList
         }
 
-    private fun show() {
+    /**
+     * 动画操作类
+     */
+    private val valueAnimator by lazy {
+        ValueAnimator().apply {
+            addUpdateListener(this@TileFloatingMenu)
+            addListener(this@TileFloatingMenu)
+        }
+    }
+
+    /**
+     * 动画进度
+     */
+    private var animationProgress = START_PROGRESS
+
+    fun show() {
         // 都是空的就不显示了
         if (option.resizeList.isEmpty() && option.buttonList.isEmpty()) {
             return
@@ -74,17 +102,43 @@ class TileFloatingMenu private constructor(private val option: Option) {
         dialogGroup.addView(
             rootGroup,
             ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT)
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+        animationProgress = START_PROGRESS
         rootGroup.post {
-            doAnimation()
+            doAnimation(true)
         }
     }
 
-    private fun doAnimation() {
-        for (index in 0 until rootGroup.childCount) {
-
+    private fun doAnimation(isOpen: Boolean) {
+        if (rootGroup.childCount == 0) {
+            dismiss()
+            return
         }
-        // TODO
+        valueAnimator.cancel()
+        val endValue = if (isOpen) {
+            END_PROGRESS
+        } else {
+            START_PROGRESS
+        }
+        val duration = (abs(animationProgress - endValue)
+                / abs(END_PROGRESS - START_PROGRESS)
+                * DURATION).toLong()
+        valueAnimator.duration = duration
+        valueAnimator.setFloatValues(animationProgress, endValue)
+        valueAnimator.start()
+    }
+
+    fun dismiss() {
+        if (rootGroup.childCount == 0) {
+            rootGroup.parent?.let {
+                if (it is ViewManager) {
+                    it.removeView(rootGroup)
+                }
+            }
+            return
+        }
+        doAnimation(false)
     }
 
     private fun initListView() {
@@ -106,10 +160,30 @@ class TileFloatingMenu private constructor(private val option: Option) {
         option.onMenuClickListener.onMenuClick(buttonInfo.id)
     }
 
+    override fun onAnimationUpdate(animation: ValueAnimator?) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onAnimationStart(animation: Animator?) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onAnimationEnd(animation: Animator?) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onAnimationCancel(animation: Animator?) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onAnimationRepeat(animation: Animator?) {
+        TODO("Not yet implemented")
+    }
+
     private class ResizeButtonAdapter(
         private val buttonList: Array<TileSize>,
         private val onItemClick: (TileSize) -> Unit
-    ): RecyclerView.Adapter<ResizeButtonHolder>() {
+    ) : RecyclerView.Adapter<ResizeButtonHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ResizeButtonHolder {
             return ResizeButtonHolder.create(parent, ::onHolderClick)
@@ -132,7 +206,7 @@ class TileFloatingMenu private constructor(private val option: Option) {
     private class MenuButtonAdapter(
         private val buttonList: Array<ButtonInfo>,
         private val onItemClick: (ButtonInfo) -> Unit
-    ): RecyclerView.Adapter<MenuButtonHolder>() {
+    ) : RecyclerView.Adapter<MenuButtonHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MenuButtonHolder {
             return MenuButtonHolder.create(parent, ::onHolderClick)
