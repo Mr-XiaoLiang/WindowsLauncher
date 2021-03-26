@@ -616,6 +616,18 @@ inline fun <T : View> T.visibleOrInvisible(boolean: Boolean, onVisible: (T.() ->
     }
 }
 
+fun View.tryVisible() {
+    if (this.visibility != View.VISIBLE) {
+        this.visibility = View.VISIBLE
+    }
+}
+
+fun View.tryInvisible() {
+    if (this.visibility != View.INVISIBLE) {
+        this.visibility = View.INVISIBLE
+    }
+}
+
 fun Int.smallerThen(o: Int): Int {
     if (this > o) {
         return o

@@ -8,20 +8,18 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewManager
 import android.widget.FrameLayout
-import android.widget.LinearLayout
 import androidx.annotation.StringRes
-import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.lollipop.windowslauncher.databinding.ItemTileFloatingMenuButtonBinding
 import com.lollipop.windowslauncher.databinding.ItemTileFloatingMenuResizeBinding
 import com.lollipop.windowslauncher.databinding.MenuTileFloatingBinding
 import com.lollipop.windowslauncher.theme.LColor
-import com.lollipop.windowslauncher.tile.Tile
 import com.lollipop.windowslauncher.tile.TileSize
 import com.lollipop.windowslauncher.utils.*
+import com.lollipop.windowslauncher.views.TileFloatingMenu.OnMenuClickListener
+import com.lollipop.windowslauncher.views.TileFloatingMenu.OnResizeClickListener
 import kotlin.math.abs
-import kotlin.math.min
 
 /**
  * @author lollipop
@@ -40,6 +38,8 @@ class TileFloatingMenu private constructor(
 
         private const val DURATION = 300L
 
+        private const val ANIMATION_THRESHOLD = 0.001F
+
         fun create(): Builder {
             return Builder()
         }
@@ -48,7 +48,7 @@ class TileFloatingMenu private constructor(
     /**
      * 根结点
      */
-    private val rootGroup: ViewGroup by lazy {
+    private val rootGroup by lazy {
         AnchorLayoutGroup(option.anchor)
     }
 
@@ -94,7 +94,7 @@ class TileFloatingMenu private constructor(
             return
         }
         // 先隐藏
-        popupView.popBody.visibleOrInvisible(false)
+        popupView.root.visibleOrInvisible(false)
         // 准备列表
         initListView()
         // 将根结点添加到屏幕
@@ -141,6 +141,41 @@ class TileFloatingMenu private constructor(
         doAnimation(false)
     }
 
+    private fun onAnimationUpdate() {
+        val value = animationProgress
+        for (index in 0 until rootGroup.childCount) {
+            val child = rootGroup.getChildAt(index) ?: continue
+            when (rootGroup.getChildAnimationStyle(index)) {
+                AnimationStyle.Expansion -> {
+                    doExpansionAnimation(child, value * 2 - 1)
+                }
+                AnimationStyle.Sheet -> {
+                    doSheetAnimation(rootGroup.height, child, value)
+                }
+            }
+        }
+    }
+
+    /**
+     * 对View做展开动画
+     * @param child 操作的View
+     * @param progress 动画的进度，[隐藏, 开启] = [-1F, 1F]
+     * 小于0时，表示展开线动画
+     * 大于0时，表示展开面动画
+     */
+    private fun doExpansionAnimation(child: View, progress: Float) {
+
+    }
+
+    /**
+     * 对View做升起动画
+     * @param child 操作的View
+     * @param progress 动画的进度，[隐藏, 开启] = [0F, 1F]
+     */
+    private fun doSheetAnimation(groupHeight: Int, child: View, progress: Float) {
+
+    }
+
     private fun initListView() {
         resizeButtonList.visibleOrGone(option.resizeList.isNotEmpty()) {
             layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false)
@@ -161,24 +196,29 @@ class TileFloatingMenu private constructor(
     }
 
     override fun onAnimationUpdate(animation: ValueAnimator?) {
-        TODO("Not yet implemented")
+        if (animation == valueAnimator) {
+            animationProgress = animation.animatedValue as Float
+            onAnimationUpdate()
+        }
     }
 
     override fun onAnimationStart(animation: Animator?) {
-        TODO("Not yet implemented")
+        for (index in 0 until rootGroup.childCount) {
+            rootGroup.getChildAt(index)?.tryVisible()
+        }
     }
 
     override fun onAnimationEnd(animation: Animator?) {
-        TODO("Not yet implemented")
+        if (abs(animationProgress - END_PROGRESS) < ANIMATION_THRESHOLD) {
+            for (index in 0 until rootGroup.childCount) {
+                rootGroup.getChildAt(index)?.tryInvisible()
+            }
+        }
     }
 
-    override fun onAnimationCancel(animation: Animator?) {
-        TODO("Not yet implemented")
-    }
+    override fun onAnimationCancel(animation: Animator?) {}
 
-    override fun onAnimationRepeat(animation: Animator?) {
-        TODO("Not yet implemented")
-    }
+    override fun onAnimationRepeat(animation: Animator?) {}
 
     private class ResizeButtonAdapter(
         private val buttonList: Array<TileSize>,
@@ -344,6 +384,10 @@ class TileFloatingMenu private constructor(
     ) : FrameLayout(anchor.context) {
 
         private val childAnimationStyles = ArrayList<AnimationStyle>()
+
+        fun getChildAnimationStyle(index: Int): AnimationStyle {
+            return childAnimationStyles[index]
+        }
 
         override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
             childAnimationStyles.clear()
