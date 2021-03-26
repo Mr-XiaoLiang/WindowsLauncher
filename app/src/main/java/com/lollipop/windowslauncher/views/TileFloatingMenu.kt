@@ -81,6 +81,9 @@ class TileFloatingMenu private constructor(private val option: Option) {
     }
 
     private fun doAnimation() {
+        for (index in 0 until rootGroup.childCount) {
+
+        }
         // TODO
     }
 
