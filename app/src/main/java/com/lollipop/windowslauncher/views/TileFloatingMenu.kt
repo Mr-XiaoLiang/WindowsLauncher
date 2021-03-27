@@ -482,6 +482,15 @@ class TileFloatingMenu private constructor(
             return this
         }
 
+        fun addResizeType(skip: TileSize, allSize: Array<TileSize>): Builder {
+            allSize.forEach {
+                if (it != skip) {
+                    addResizeType(it)
+                }
+            }
+            return this
+        }
+
         fun addButton(name: Int, id: Int): Builder {
             // 避免名字和id完全一致的场景（因为没有意义）
             if (buttonList.none { it.id == id && it.name == name }) {
