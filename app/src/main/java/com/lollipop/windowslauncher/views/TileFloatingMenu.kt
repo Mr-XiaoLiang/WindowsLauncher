@@ -164,7 +164,22 @@ class TileFloatingMenu private constructor(
      * 大于0时，表示展开面动画
      */
     private fun doExpansionAnimation(child: View, progress: Float) {
-
+        val isExpansionLine = progress < 0
+        val realProgress = if (isExpansionLine) {
+            progress + 1
+        } else {
+            progress
+        }
+        val oneDp = 1.dp2px()
+        if (isExpansionLine) {
+            child.scaleY = oneDp / child.height
+            child.translationY = (oneDp - child.height) / 2
+            child.scaleX = realProgress
+        } else {
+            child.scaleX = 1F
+            child.scaleY = realProgress
+            child.translationY = ((1 - realProgress) * child.height) / 2
+        }
     }
 
     /**
@@ -173,7 +188,8 @@ class TileFloatingMenu private constructor(
      * @param progress 动画的进度，[隐藏, 开启] = [0F, 1F]
      */
     private fun doSheetAnimation(groupHeight: Int, child: View, progress: Float) {
-
+        val allLength = groupHeight - child.top
+        child.translationY = (1 - progress) * allLength
     }
 
     private fun initListView() {
