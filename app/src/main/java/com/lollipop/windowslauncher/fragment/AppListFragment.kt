@@ -13,6 +13,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
+import com.lollipop.windowslauncher.R
 import com.lollipop.windowslauncher.base.BaseFragment
 import com.lollipop.windowslauncher.databinding.FragmentAppListBinding
 import com.lollipop.windowslauncher.databinding.ItemAppListBinding
@@ -21,6 +22,7 @@ import com.lollipop.windowslauncher.theme.LColor
 import com.lollipop.windowslauncher.utils.*
 import com.lollipop.windowslauncher.views.IconImageView
 import com.lollipop.windowslauncher.views.KeyNumberDrawable
+import com.lollipop.windowslauncher.views.TileFloatingMenu
 import net.sourceforge.pinyin4j.PinyinHelper
 import java.util.*
 import kotlin.collections.ArrayList
@@ -264,7 +266,10 @@ class AppListFragment : BaseFragment() {
         }
     }
 
-    private fun onItemLongClick(position: Int) {
+    private fun onItemLongClick(holder: RecyclerView.ViewHolder) {
+        if (holder is AppInfoHolder) {
+            holder.openMenu()
+        }
         // TODO
     }
 
@@ -340,7 +345,7 @@ class AppListFragment : BaseFragment() {
     private class AppInfoAdapter(
         private val appList: ArrayList<AppListInfo>,
         private val onClick: (Int) -> Unit,
-        private val onLongClick: (Int) -> Unit,
+        private val onLongClick: (RecyclerView.ViewHolder) -> Unit,
     ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
         companion object {
@@ -375,7 +380,7 @@ class AppListFragment : BaseFragment() {
         }
 
         private fun onHolderLongClick(holder: RecyclerView.ViewHolder) {
-            onLongClick(holder.adapterPosition)
+            onLongClick(holder)
         }
 
         override fun getItemViewType(position: Int): Int {
@@ -425,6 +430,15 @@ class AppListFragment : BaseFragment() {
             }
             viewBinding.iconView.setOutline(IconImageView.Outline.None, IconImageView.Outline.Oval)
             viewBinding.iconView.setIconWeight(0.8F, 0.5F)
+        }
+
+        fun openMenu() {
+            TileFloatingMenu
+                .create()
+                .addButton(R.string.app_name, 0)
+                .onClick {
+                    // TODO
+                }.showIn(itemView)
         }
 
         fun bind(appInfo: AppListInfo) {
