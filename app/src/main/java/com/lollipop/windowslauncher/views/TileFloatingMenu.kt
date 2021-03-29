@@ -104,6 +104,9 @@ class TileFloatingMenu private constructor(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
         )
+        rootGroup.setOnClickListener {
+            dismiss()
+        }
         animationProgress = START_PROGRESS
         rootGroup.post {
             doAnimation(true)
@@ -205,10 +208,12 @@ class TileFloatingMenu private constructor(
 
     private fun onResizeClick(tileSize: TileSize) {
         option.onResizeClickListener.onResizeClick(tileSize)
+        dismiss()
     }
 
     private fun onMenuClick(buttonInfo: ButtonInfo) {
         option.onMenuClickListener.onMenuClick(buttonInfo.id)
+        dismiss()
     }
 
     override fun onAnimationUpdate(animation: ValueAnimator?) {

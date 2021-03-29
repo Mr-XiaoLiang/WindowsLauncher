@@ -37,6 +37,19 @@ import kotlin.math.max
  */
 class AppListFragment : BaseFragment() {
 
+    object AppMenu {
+
+        const val ACTION_ADD_TO_DESKTOP = 1
+
+        fun createMenu(anchor: View, onClick: (action: Int) -> Unit) {
+            TileFloatingMenu
+                .create()
+                .addButton(R.string.add_to_desktop, ACTION_ADD_TO_DESKTOP)
+                .onClick(onClick)
+                .showIn(anchor)
+        }
+    }
+
     companion object {
         private val keyIconStyle: KeyNumberDrawable.() -> Unit = {
             style = KeyNumberDrawable.Style.Stroke
@@ -63,7 +76,7 @@ class AppListFragment : BaseFragment() {
     }
 
     private val appInfoAdapter by lazy {
-        AppInfoAdapter(appList, ::onItemClick, ::onItemLongClick)
+        AppInfoAdapter(appList, ::onItemClick, ::onItemLongClick, ::onItemMenuClick)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -273,6 +286,10 @@ class AppListFragment : BaseFragment() {
         // TODO
     }
 
+    private fun onItemMenuClick(holder: RecyclerView.ViewHolder, action: Int) {
+        // TODO
+    }
+
     private class FloatingKeyHelper(
         private val viewBinding: ItemAppListBinding,
         private val getLabelKey: (Int) -> String,
@@ -346,6 +363,7 @@ class AppListFragment : BaseFragment() {
         private val appList: ArrayList<AppListInfo>,
         private val onClick: (Int) -> Unit,
         private val onLongClick: (RecyclerView.ViewHolder) -> Unit,
+        private val onMenuClick: (RecyclerView.ViewHolder, Int) -> Unit,
     ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
         companion object {
@@ -357,7 +375,7 @@ class AppListFragment : BaseFragment() {
             if (viewType == VIEW_TYPE_KEY) {
                 return AppKeyHolder.create(parent, ::onHolderClick)
             }
-            return AppInfoHolder.create(parent, ::onHolderClick, ::onHolderLongClick)
+            return AppInfoHolder.create(parent, ::onHolderClick, ::onHolderLongClick, ::onHolderMenuClick)
         }
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
@@ -383,6 +401,10 @@ class AppListFragment : BaseFragment() {
             onLongClick(holder)
         }
 
+        private fun onHolderMenuClick(holder: RecyclerView.ViewHolder, action: Int) {
+            onMenuClick(holder, action)
+        }
+
         override fun getItemViewType(position: Int): Int {
             return if (appList[position].isAppInfo) {
                 VIEW_TYPE_APP
@@ -402,6 +424,7 @@ class AppListFragment : BaseFragment() {
         private val viewBinding: ItemAppListBinding,
         private val onClick: (AppInfoHolder) -> Unit,
         private val onLongClick: (AppInfoHolder) -> Unit,
+        private val actionCallback: (AppInfoHolder, action: Int) -> Unit
     ) : RecyclerView.ViewHolder(viewBinding.root) {
 
         companion object {
@@ -409,8 +432,9 @@ class AppListFragment : BaseFragment() {
                 parent: ViewGroup,
                 onClick: (AppInfoHolder) -> Unit,
                 onLongClick: (AppInfoHolder) -> Unit,
+                actionCallback: (AppInfoHolder, action: Int) -> Unit
             ): AppInfoHolder {
-                return AppInfoHolder(parent.bind(), onClick, onLongClick)
+                return AppInfoHolder(parent.bind(), onClick, onLongClick, actionCallback)
             }
         }
 
@@ -433,12 +457,9 @@ class AppListFragment : BaseFragment() {
         }
 
         fun openMenu() {
-            TileFloatingMenu
-                .create()
-                .addButton(R.string.app_name, 0)
-                .onClick {
-                    // TODO
-                }.showIn(itemView)
+            AppMenu.createMenu(itemView) {
+                actionCallback(this, it)
+            }
         }
 
         fun bind(appInfo: AppListInfo) {

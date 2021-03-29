@@ -5,4 +5,6 @@
     <string name="tile_size_m">大</string>
     <string name="tile_size_l">宽</string>
     <string name="tile_size_xl">超大</string>
+
+    <string name="add_to_desktop">添加到桌面</string>
 </resources>
