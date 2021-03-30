@@ -67,6 +67,8 @@ class AppListFragment : BaseFragment() {
 
     private val keyPositionMap = HashMap<String, Int>()
 
+    private var fragmentCallback: Callback? = null
+
     private val appListInsetsHelper by lazy {
         WindowInsetsHelper(viewBinding.appListContent)
     }
@@ -89,11 +91,15 @@ class AppListFragment : BaseFragment() {
     override fun onAttach(context: Context) {
         super.onAttach(context)
         appHelper.loadAppInfo(context)
+        identityCheck<Callback>(context) {
+            fragmentCallback = it
+        }
     }
 
     override fun onDetach() {
         super.onDetach()
         appHelper.onDestroy()
+        fragmentCallback = null
     }
 
     override fun onCreateView(
@@ -283,10 +289,15 @@ class AppListFragment : BaseFragment() {
         if (holder is AppInfoHolder) {
             holder.openMenu()
         }
-        // TODO
     }
 
     private fun onItemMenuClick(holder: RecyclerView.ViewHolder, action: Int) {
+        val appInfo = appList[holder.adapterPosition].app
+        when (action) {
+            AppMenu.ACTION_ADD_TO_DESKTOP -> {
+                fragmentCallback?.addAppToDesktop(appInfo)
+            }
+        }
         // TODO
     }
 
@@ -546,5 +557,9 @@ class AppListFragment : BaseFragment() {
                 return SNAP_TO_START //设置滚动位置
             }
         }
+    }
+
+    interface Callback {
+        fun addAppToDesktop(appInfo: IconHelper.AppInfo)
     }
 }
