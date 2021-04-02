@@ -132,7 +132,7 @@ class TileFloatingMenu private constructor(
         valueAnimator.start()
     }
 
-    fun dismiss() {
+    private fun dismiss() {
         if (rootGroup.childCount == 0) {
             rootGroup.parent?.let {
                 if (it is ViewManager) {
