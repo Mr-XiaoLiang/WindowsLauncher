@@ -3,9 +3,11 @@ package com.lollipop.windowslauncher.fragment
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ShortcutManager
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.PointF
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -299,6 +301,12 @@ class AppListFragment : BaseFragment() {
             }
         }
         // TODO
+        // 我们需要解析Shortcut
+        if (versionThen(Build.VERSION_CODES.N_MR1)) {
+            val manager = context!!.getSystemService(Context.SHORTCUT_SERVICE) as ShortcutManager
+//            manager.getShortcuts()
+        }
+
     }
 
     private class FloatingKeyHelper(
