@@ -301,11 +301,6 @@ class AppListFragment : BaseFragment() {
             }
         }
         // TODO
-        // 我们需要解析Shortcut
-        if (versionThen(Build.VERSION_CODES.N_MR1)) {
-            val manager = context!!.getSystemService(Context.SHORTCUT_SERVICE) as ShortcutManager
-//            manager.getShortcuts()
-        }
 
     }
 
