@@ -3,11 +3,8 @@ package com.lollipop.windowslauncher.fragment
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.pm.ShortcutManager
-import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.PointF
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
