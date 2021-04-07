@@ -72,6 +72,7 @@ class DesktopFragment : BaseFragment() {
                 show()
             }
         }
+        viewBinding.appListBtn.tryInvisible()
         val myContext = context
         if (myContext == null) {
             initTileGroup()
@@ -96,6 +97,7 @@ class DesktopFragment : BaseFragment() {
             bindCreator(TileViewCreator())
             addTile(tileList)
         }
+        viewBinding.appListBtn.tryVisible()
     }
 
     override fun onColorChanged() {
