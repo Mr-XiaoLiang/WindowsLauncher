@@ -1,6 +1,5 @@
 package com.lollipop.windowslauncher.tile
 
-import androidx.annotation.StringRes
 import com.lollipop.windowslauncher.R
 
 /**
