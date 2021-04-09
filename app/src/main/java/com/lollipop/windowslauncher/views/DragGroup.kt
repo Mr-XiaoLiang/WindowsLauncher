@@ -9,6 +9,7 @@ import android.widget.FrameLayout
  * @date 4/8/21 23:21
  * 拖拽的容器，它会在需要的时候拦截事件，
  * 并且拖拽传递事件
+ * ！！
  */
 class DragGroup(context: Context, attrs: AttributeSet?, style: Int) :
     FrameLayout(context, attrs, style) {
