@@ -1,6 +1,8 @@
 package com.lollipop.windowslauncher.views
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.util.AttributeSet
 import android.view.View
 import android.widget.FrameLayout
@@ -18,8 +20,29 @@ class DragGroup(context: Context, attrs: AttributeSet?, style: Int) :
     constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)
     constructor(context: Context) : this(context, null)
 
-    fun startDrag(view: View) {
+    private var snapshotBitmap: Bitmap? = null
 
+    fun startDrag(view: View) {
+        checkSnapshot(view)
+
+    }
+
+    private fun checkSnapshot(view: View) {
+        val oldSnapshot = snapshotBitmap
+        if (oldSnapshot != null) {
+            if (oldSnapshot.width != view.width
+                || oldSnapshot.height != view.height
+            ) {
+                snapshotBitmap = null
+                oldSnapshot.recycle()
+            }
+        }
+        val newSnapshot = snapshotBitmap ?: Bitmap.createBitmap(
+            view.width, view.height, Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(newSnapshot)
+        view.draw(canvas)
+        snapshotBitmap = newSnapshot
     }
 
 }
