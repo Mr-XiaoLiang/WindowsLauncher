@@ -2,6 +2,7 @@ package com.lollipop.windowslauncher.views
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.View
 import android.widget.FrameLayout
 
 /**
@@ -16,5 +17,9 @@ class DragGroup(context: Context, attrs: AttributeSet?, style: Int) :
 
     constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)
     constructor(context: Context) : this(context, null)
+
+    fun startDrag(view: View) {
+
+    }
 
 }
