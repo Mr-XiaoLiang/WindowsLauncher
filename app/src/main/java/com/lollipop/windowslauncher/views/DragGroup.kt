@@ -91,7 +91,7 @@ class DragGroup(context: Context, attrs: AttributeSet?, style: Int) :
                 }
             }
             MotionEvent.ACTION_UP -> {
-
+                onTouchUp(ev)
             }
         }
         return super.onInterceptTouchEvent(ev)
