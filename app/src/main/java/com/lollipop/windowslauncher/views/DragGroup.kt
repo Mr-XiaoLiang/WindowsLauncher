@@ -63,7 +63,8 @@ class DragGroup(context: Context, attrs: AttributeSet?, style: Int) :
         }
         checkSnapshot(view)
         snapshotBitmap ?: return false
-
+        checkLocation(view)
+        dragState = DragState.DRAGGING
         return true
     }
 
@@ -151,6 +152,18 @@ class DragGroup(context: Context, attrs: AttributeSet?, style: Int) :
         val canvas = Canvas(newSnapshot)
         view.draw(canvas)
         snapshotBitmap = newSnapshot
+    }
+
+    private fun checkLocation(view: View) {
+        val targetLocation = IntArray(2)
+        view.getLocationInWindow(targetLocation)
+        val selfLocation = IntArray(2)
+        getLocationInWindow(selfLocation)
+
+        snapshotOffset.set(
+            targetLocation[0] - selfLocation[0],
+            targetLocation[1] - selfLocation[1]
+        )
     }
 
     private enum class DragState {
