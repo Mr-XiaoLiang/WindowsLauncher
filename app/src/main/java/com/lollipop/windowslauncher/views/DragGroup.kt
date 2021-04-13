@@ -1,10 +1,7 @@
 package com.lollipop.windowslauncher.views
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Point
-import android.graphics.PointF
+import android.graphics.*
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
@@ -32,7 +29,7 @@ class DragGroup(context: Context, attrs: AttributeSet?, style: Int) :
      * 快照的偏移量
      * 用于确定快照显示的位置（与View对应
      */
-    private val snapshotOffset = Point()
+    private val snapshotRect = RectF()
 
     /**
      * 手指按下的位置
@@ -56,6 +53,11 @@ class DragGroup(context: Context, attrs: AttributeSet?, style: Int) :
      * 拖拽的状态
      */
     private var dragState = DragState.IDLE
+
+    /**
+     * Bitmap的尺寸
+     */
+    private val bitmapRect = Rect()
 
     fun startDrag(view: View): Boolean {
         if (!dragEnable) {
@@ -106,11 +108,36 @@ class DragGroup(context: Context, attrs: AttributeSet?, style: Int) :
             touchDownLocation.set(ev.activeX, ev.activeY)
             return
         }
-        // TODO 拖拽的逻辑需要实现
+        val newX = ev.activeX
+        val newY = ev.activeY
+        val offsetX = newX - touchDownLocation.x
+        val offsetY = newY - touchDownLocation.y
+        snapshotRect.offset(offsetX, offsetY)
+        touchDownLocation.set(newX, newY)
+        invalidate()
+        dispatchDragEvent()
+    }
+
+    /**
+     * 分发拖拽事件，使拖拽本身有意义
+     */
+    private fun dispatchDragEvent() {
+        // TODO
+    }
+
+    override fun onDrawForeground(canvas: Canvas?) {
+        super.onDrawForeground(canvas)
+        canvas?:return
+        val bitmap = snapshotBitmap?:return
+        // 绘制拖拽的对象
+        canvas.drawBitmap(bitmap, bitmapRect, snapshotRect, null)
     }
 
     private fun onTouchUp(ev: MotionEvent) {
         // TODO 抬手逻辑待实现
+
+        // 释放Bitmap
+        snapshotBitmap?.recycle()
     }
 
     private val MotionEvent.activeX: Float
@@ -152,6 +179,7 @@ class DragGroup(context: Context, attrs: AttributeSet?, style: Int) :
         val canvas = Canvas(newSnapshot)
         view.draw(canvas)
         snapshotBitmap = newSnapshot
+        bitmapRect.set(0, 0, newSnapshot.width, newSnapshot.height)
     }
 
     private fun checkLocation(view: View) {
@@ -159,10 +187,10 @@ class DragGroup(context: Context, attrs: AttributeSet?, style: Int) :
         view.getLocationInWindow(targetLocation)
         val selfLocation = IntArray(2)
         getLocationInWindow(selfLocation)
-
-        snapshotOffset.set(
-            targetLocation[0] - selfLocation[0],
-            targetLocation[1] - selfLocation[1]
+        snapshotRect.set(bitmapRect)
+        snapshotRect.offset(
+            (targetLocation[0] - selfLocation[0]).toFloat(),
+            (targetLocation[1] - selfLocation[1]).toFloat()
         )
     }
 
