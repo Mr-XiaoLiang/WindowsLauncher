@@ -17,6 +17,36 @@ import android.widget.FrameLayout
 class DragGroup(context: Context, attrs: AttributeSet?, style: Int) :
     FrameLayout(context, attrs, style) {
 
+    companion object {
+
+        fun viewOffset(self: View, target: View): IntArray {
+            val targetLocation = IntArray(2)
+            target.getLocationInWindow(targetLocation)
+            val selfLocation = IntArray(2)
+            self.getLocationInWindow(selfLocation)
+            return intArrayOf(
+                (targetLocation[0] - selfLocation[0]),
+                (targetLocation[1] - selfLocation[1])
+            )
+        }
+
+        fun locationTransformation(
+            self: View, target: View,
+            targetLeft: Float, targetTop: Float,
+            targetRight: Float, targetBottom: Float
+        ): RectF {
+            val viewOffset = viewOffset(self, target)
+            val x = viewOffset[0]
+            val y = viewOffset[1]
+            return RectF(
+                targetLeft + x,
+                targetTop + y,
+                targetRight + x,
+                targetBottom + y
+            )
+        }
+    }
+
     constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)
     constructor(context: Context) : this(context, null)
 
@@ -58,6 +88,11 @@ class DragGroup(context: Context, attrs: AttributeSet?, style: Int) :
      * Bitmap的尺寸
      */
     private val bitmapRect = Rect()
+
+    /**
+     * 拖拽监听器集合
+     */
+    private val dragListenerList = ArrayList<OnDragChangeListener>()
 
     fun startDrag(view: View): Boolean {
         if (!dragEnable) {
@@ -122,13 +157,20 @@ class DragGroup(context: Context, attrs: AttributeSet?, style: Int) :
      * 分发拖拽事件，使拖拽本身有意义
      */
     private fun dispatchDragEvent() {
-        // TODO
+        dragListenerList.forEach {
+            it.onDragChange(
+                snapshotRect.left,
+                snapshotRect.top,
+                snapshotRect.right,
+                snapshotRect.bottom
+            )
+        }
     }
 
     override fun onDrawForeground(canvas: Canvas?) {
         super.onDrawForeground(canvas)
-        canvas?:return
-        val bitmap = snapshotBitmap?:return
+        canvas ?: return
+        val bitmap = snapshotBitmap ?: return
         // 绘制拖拽的对象
         canvas.drawBitmap(bitmap, bitmapRect, snapshotRect, null)
     }
@@ -183,14 +225,11 @@ class DragGroup(context: Context, attrs: AttributeSet?, style: Int) :
     }
 
     private fun checkLocation(view: View) {
-        val targetLocation = IntArray(2)
-        view.getLocationInWindow(targetLocation)
-        val selfLocation = IntArray(2)
-        getLocationInWindow(selfLocation)
+        val viewOffset = viewOffset(this, view)
         snapshotRect.set(bitmapRect)
         snapshotRect.offset(
-            (targetLocation[0] - selfLocation[0]).toFloat(),
-            (targetLocation[1] - selfLocation[1]).toFloat()
+            viewOffset[0].toFloat(),
+            viewOffset[1].toFloat()
         )
     }
 
@@ -201,6 +240,10 @@ class DragGroup(context: Context, attrs: AttributeSet?, style: Int) :
             get() {
                 return this == IDLE
             }
+    }
+
+    fun interface OnDragChangeListener {
+        fun onDragChange(left: Float, top: Float, right: Float, bottom: Float)
     }
 
 }
