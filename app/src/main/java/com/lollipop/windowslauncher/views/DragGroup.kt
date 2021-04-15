@@ -176,8 +176,14 @@ class DragGroup(context: Context, attrs: AttributeSet?, style: Int) :
     }
 
     private fun onTouchUp(ev: MotionEvent) {
-        // TODO 抬手逻辑待实现
-
+        dragListenerList.forEach {
+            it.onDragEnd(
+                snapshotRect.left,
+                snapshotRect.top,
+                snapshotRect.right,
+                snapshotRect.bottom
+            )
+        }
         // 释放Bitmap
         snapshotBitmap?.recycle()
     }
@@ -242,8 +248,9 @@ class DragGroup(context: Context, attrs: AttributeSet?, style: Int) :
             }
     }
 
-    fun interface OnDragChangeListener {
+    interface OnDragChangeListener {
         fun onDragChange(left: Float, top: Float, right: Float, bottom: Float)
+        fun onDragEnd(left: Float, top: Float, right: Float, bottom: Float)
     }
 
 }
